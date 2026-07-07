@@ -1,0 +1,30 @@
+# Production stack for the Neaven web app ONLY.
+#
+# This is an independent Docker Compose project ("neaven-web"). It deliberately
+# does NOT define or touch Caddy, Postgres, Redis, PR-Agent or Activepieces —
+# those run from their own compose files on the server and are left untouched.
+#
+# The app joins the pre-existing external `neaven_shared` network so Caddy can
+# be pointed at container `neaven-web` later (routing config is a separate,
+# manual change — this file never edits the Caddyfile).
+services:
+  web:
+    build:
+      context: ./app
+    image: neaven-web:latest
+    container_name: neaven-web
+    restart: unless-stopped
+    # Runtime env is written to app/.env on the server by the deploy workflow
+    # from the PROD_ENV_FILE GitHub secret. Not committed to git.
+    env_file:
+      - ./app/.env
+    # Bound to loopback only — not publicly exposed. Reachable by Caddy over the
+    # shared network by container name, and locally for smoke tests.
+    ports:
+      - "127.0.0.1:3000:3000"
+    networks:
+      - neaven_shared
+
+networks:
+  neaven_shared:
+    external: true

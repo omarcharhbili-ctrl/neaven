@@ -368,11 +368,18 @@ function GoalTab() {
 
 // ─── Funnel Tab ─────────────────────────────────────────────────────────────
 
-function FunnelTab() {
+function FunnelTab({ onOpenJourney }: { onOpenJourney: (goal: string) => void }) {
   const [hoveredStep, setHoveredStep] = useState<string | null>(null);
   const [funnelSelectorHover, setFunnelSelectorHover] = useState(false);
   const steps = funnelData.data;
   const maxVisitors = steps[0].visitors;
+
+  // Each funnel step maps to the goal whose visitor journey it opens.
+  const stepGoalMap = [
+    "Scroll > Problem", "Scroll > Problem", "scroll_to_solution",
+    "scroll_to_what_you_will_get", "scroll_to_is_this_possible",
+    "scroll_to_story", "scroll_to_pricing",
+  ];
 
   // Top sources/countries for tooltip
   const topSources = [
@@ -395,8 +402,10 @@ function FunnelTab() {
     []
   );
 
+  // Muted steel-blue gradient (darker → lighter) so the funnel reads as one
+  // continuous translucent stream rather than 7 distinct colored blocks.
   const funnelColors = [
-    "#1e3a8a", "#1d4ed8", "#3b82f6", "#60a5fa", "#93c5fd", "#bfdbfe", "#dbeafe",
+    "#41719c", "#557fa8", "#6c92b6", "#8aaac6", "#abc3d8", "#caddea", "#e4edf4",
   ];
 
   const stepIcons = ["🔥", "✅", "✅", "✅", "✅", "✅", "✅"];
@@ -438,19 +447,22 @@ function FunnelTab() {
           margin={{ top: 10, right: 20, bottom: 10, left: 20 }}
           direction="horizontal"
           interpolation="smooth"
-          shapeBlending={0.82}
-          spacing={2}
+          shapeBlending={0.95}
+          spacing={0}
+          fillOpacity={0.88}
           valueFormat=" >-,.0f"
           colors={funnelColors}
-          borderWidth={0}
-          labelColor="#ffffff"
+          borderWidth={1.5}
+          borderColor={{ from: "color", modifiers: [["brighter", 1.4]] }}
+          borderOpacity={0.6}
+          labelColor="transparent"
           enableBeforeSeparators={true}
           enableAfterSeparators={false}
           beforeSeparatorLength={100}
           beforeSeparatorOffset={0}
-          currentPartSizeExtension={3}
-          currentBorderWidth={0}
-          motionConfig="molasses"
+          currentPartSizeExtension={18}
+          currentBorderWidth={3}
+          motionConfig="wobbly"
           onMouseEnter={(part: { data: { id: string } }) => setHoveredStep(part.data.id)}
           onMouseLeave={() => setHoveredStep(null)}
           tooltip={(props: { part: { data: { id: string; value: number; label: string } } }) => {
@@ -504,13 +516,13 @@ function FunnelTab() {
             );
           }}
         />
-        {/* Drop-off pills — positioned near the top of each separator */}
-        <div className="absolute inset-x-5 flex pointer-events-none" style={{ zIndex: 2, top: "22%" }}>
+        {/* Drop-off pills — vertically centered on each separator */}
+        <div className="absolute inset-x-5 flex pointer-events-none" style={{ zIndex: 2, top: "50%", transform: "translateY(-50%)" }}>
           {steps.slice(0, -1).map((step, i) => {
             const pct = ((1 - steps[i + 1].visitors / step.visitors) * 100).toFixed(1);
             return (
-              <div key={i} className="flex-1 flex items-center justify-end">
-                <span className="px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap" style={{ background: "rgba(107,114,128,0.45)", color: "white", backdropFilter: "blur(4px)" }}>
+              <div key={i} className="flex-1 flex items-center justify-center">
+                <span className="px-2.5 py-1 rounded-full text-[10px] font-medium whitespace-nowrap" style={{ background: "rgba(75,85,99,0.55)", color: "white", backdropFilter: "blur(4px)" }}>
                   -{pct}% →
                 </span>
               </div>
@@ -520,20 +532,30 @@ function FunnelTab() {
         </div>
       </div>
 
-      {/* Step labels below the funnel */}
+      {/* Step labels below the funnel — each is a link into that step's visitor journey */}
       <div className="flex px-5 mt-2">
         {steps.map((step, i) => (
-          <div key={step.name} className="flex-1 text-center px-1">
+          <button
+            key={step.name}
+            onClick={() => onOpenJourney(stepGoalMap[i])}
+            className="group/step relative flex-1 text-center px-1 cursor-pointer"
+          >
             <p className="text-[13px] font-bold text-[#171717]">{fmt(step.visitors)} visitors</p>
-            <p className="text-[11px] text-[#a3a3a3] flex items-center justify-center gap-1 mt-1">
+            <p className="text-[11px] text-[#a3a3a3] group-hover/step:text-[#525252] flex items-center justify-center gap-1 mt-1 transition-colors">
               {i === 0 ? (
                 <span className="text-xs">👆</span>
               ) : (
                 <span className="inline-flex items-center justify-center w-3.5 h-3.5 rounded bg-[#14b8a6] text-white text-[8px]">✓</span>
               )}
               <span className="truncate max-w-[80px]">{step.name}</span>
+              <span className="opacity-0 group-hover/step:opacity-100 transition-opacity text-[#f97316]">↗</span>
             </p>
-          </div>
+            {/* hover tooltip */}
+            <span className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-1.5 opacity-0 group-hover/step:opacity-100 transition-opacity whitespace-nowrap z-20 px-2.5 py-1.5 rounded-lg bg-[#171717] text-left shadow-lg">
+              <span className="block text-[11px] font-semibold text-white">Goal complete: {stepGoalMap[i]}</span>
+              <span className="block text-[10px] text-[#a3a3a3]">Click to view visitor journey</span>
+            </span>
+          </button>
         ))}
       </div>
     </div>
@@ -778,10 +800,12 @@ function UserTab() {
 
 // ─── Journey Tab ────────────────────────────────────────────────────────────
 
-function JourneyTab() {
+function JourneyTab({ goal: selectedGoalName, setGoal: setSelectedGoalName }: {
+  goal: string;
+  setGoal: (g: string) => void;
+}) {
   const [selectedJourney, setSelectedJourney] = useState<typeof journeyData[number] | null>(null);
   const [goalDD, setGoalDD] = useState(false);
-  const [selectedGoalName, setSelectedGoalName] = useState("Payment");
   const [goalSearch, setGoalSearch] = useState("");
 
   const filteredGoals = useMemo(() =>
@@ -909,6 +933,7 @@ function JourneyTab() {
 
 export function BottomPanel() {
   const [activeTab, setActiveTab] = useState<"Goal" | "Funnel" | "User" | "Journey">("Goal");
+  const [journeyGoal, setJourneyGoal] = useState("Scroll > Problem");
 
   return (
     <div className="rounded-xl border border-[#e5e5e5] bg-white overflow-hidden">
@@ -931,9 +956,9 @@ export function BottomPanel() {
 
       {/* Tab content */}
       {activeTab === "Goal" && <GoalTab />}
-      {activeTab === "Funnel" && <FunnelTab />}
+      {activeTab === "Funnel" && <FunnelTab onOpenJourney={(g) => { setJourneyGoal(g); setActiveTab("Journey"); }} />}
       {activeTab === "User" && <UserTab />}
-      {activeTab === "Journey" && <JourneyTab />}
+      {activeTab === "Journey" && <JourneyTab goal={journeyGoal} setGoal={setJourneyGoal} />}
     </div>
   );
 }

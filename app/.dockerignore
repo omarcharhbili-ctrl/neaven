@@ -1,0 +1,13 @@
+node_modules
+.next
+.git
+.gitignore
+npm-debug.log*
+Dockerfile
+.dockerignore
+README.md
+*.tsbuildinfo
+# Keep .env available at build time so NEXT_PUBLIC_* vars are inlined.
+# Never ship keys/certs into image layers, though:
+secrets/
+*.pem

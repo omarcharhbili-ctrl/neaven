@@ -1,0 +1,77 @@
+name: Deploy to production
+
+# Builds and deploys the Neaven web app to the Hetzner VPS on every push to main.
+# The build happens on the server (docker compose build) so no container registry
+# is required. This workflow only manages the `neaven-web` compose project — it
+# never touches Caddy, Postgres, Redis, PR-Agent or Activepieces.
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: production-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_SSH_PORT: ${{ secrets.SERVER_SSH_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          echo "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          PORT="${SERVER_SSH_PORT:-22}"
+          ssh-keyscan -p "$PORT" -H "$SERVER_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Write production env file
+        env:
+          PROD_ENV_FILE: ${{ secrets.PROD_ENV_FILE }}
+        run: |
+          # Runtime + build-time env for the app. Kept out of git; lives only on
+          # the runner (transiently) and on the server.
+          printf '%s' "$PROD_ENV_FILE" > app/.env
+
+      - name: Sync files to server
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_SSH_PORT: ${{ secrets.SERVER_SSH_PORT }}
+        run: |
+          PORT="${SERVER_SSH_PORT:-22}"
+          rsync -az --delete \
+            --exclude '.git' \
+            --exclude 'node_modules' \
+            --exclude '.next' \
+            -e "ssh -p $PORT -i ~/.ssh/deploy_key" \
+            ./ "$SERVER_USER@$SERVER_HOST:~/neaven-web/"
+
+      - name: Build and restart the app container
+        env:
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_SSH_PORT: ${{ secrets.SERVER_SSH_PORT }}
+        run: |
+          PORT="${SERVER_SSH_PORT:-22}"
+          ssh -p "$PORT" -i ~/.ssh/deploy_key "$SERVER_USER@$SERVER_HOST" bash -s <<'EOF'
+            set -euo pipefail
+            cd ~/neaven-web
+            # Ensure the shared network exists (created by the core stack).
+            docker network inspect neaven_shared >/dev/null 2>&1 || \
+              docker network create neaven_shared
+            docker compose -f docker-compose.prod.yml up -d --build
+            docker image prune -f
+          EOF
+
+      - name: Clean up SSH key
+        if: always()
+        run: rm -f ~/.ssh/deploy_key

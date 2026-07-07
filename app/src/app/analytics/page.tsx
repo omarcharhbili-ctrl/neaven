@@ -203,20 +203,78 @@ function ChartTip({ active, payload, mk }: any) {
 
 // ---- panel-level tooltip ---------------------------------------------------
 
-function PanelTooltip({ item, isKeyword, isExitLink, x, y, sideX, sideY }: {
+function PanelTooltip({ item, isKeyword, isExitLink, cursorRef, rowRef, panelBoundsRef }: {
   item: any | null; isKeyword?: boolean; isExitLink?: boolean;
-  x: number; y: number; sideX: "left" | "right"; sideY: "above" | "below";
+  cursorRef: React.MutableRefObject<{ x: number; y: number }>;
+  rowRef: React.MutableRefObject<{ top: number; bottom: number }>;
+  panelBoundsRef: React.MutableRefObject<{ left: number; right: number; top: number; bottom: number }>;
 }) {
+  const ref = useRef<HTMLDivElement>(null);
+  const pos = useRef({ x: 0, y: 0 });   // current rendered position
+  const fresh = useRef(true);           // snap (don't glide) on first appearance
+
+  // Mark for a snap whenever the tooltip is hidden, so it never flies across
+  // the screen from a stale spot when it reappears on a far-away row.
+  if (!item) fresh.current = true;
+
+  useEffect(() => {
+    let raf = 0;
+    const gap = 14;
+    const margin = 12;   // min distance the tooltip keeps from the panel edges
+    const tick = () => {
+      const el = ref.current;
+      if (el) {
+        const w = el.offsetWidth || 210;
+        const h = el.offsetHeight || 140;
+        const { left: pl, right: pr, bottom: pb, top: pt } = panelBoundsRef.current;
+        // X is a continuous, clamped function of the cursor X: as the cursor
+        // sweeps panel-left → panel-right, the tooltip glides left-aligned →
+        // right-aligned *inside* the panel (never past its borders). Because it
+        // travels slower than the cursor, the cursor appears to slide across it.
+        const minLeft = pl + margin;
+        const maxLeft = pr - margin - w;
+        let tx: number;
+        if (maxLeft <= minLeft) {
+          tx = (pl + pr) / 2 - w / 2;            // panel narrower than tooltip → center
+        } else {
+          const t = Math.max(0, Math.min(1, (cursorRef.current.x - pl) / (pr - pl)));
+          tx = minLeft + t * (maxLeft - minLeft);
+        }
+        // Y is anchored to the active row's edges so the cursor (which sits
+        // inside the row) always keeps a real gap from the tooltip once it
+        // settles. It sits a gap *below the row's bottom* by default, and only
+        // flips to a gap *above the row's top* when its actual height would
+        // crowd the panel bottom — so a short tooltip can stay below even on the
+        // lower rows, while a tall one flips earlier.
+        const { top: rowTop, bottom: rowBottom } = rowRef.current;
+        const fitsBelow = rowBottom + gap + h <= pb - margin;
+        const fitsAbove = rowTop - gap - h >= pt + margin;
+        const ty = (!fitsBelow && fitsAbove) ? rowTop - h - gap : rowBottom + gap;
+        if (fresh.current) {
+          pos.current.x = tx; pos.current.y = ty;
+          fresh.current = false;
+          el.style.opacity = "0";
+          requestAnimationFrame(() => { if (ref.current) ref.current.style.opacity = "1"; });
+        } else {
+          // Exponential ease toward the target — low factor = slow, gliding,
+          // never dashy (especially the vertical step when rows change).
+          const ease = 0.1;
+          pos.current.x += (tx - pos.current.x) * ease;
+          pos.current.y += (ty - pos.current.y) * ease;
+        }
+        el.style.transform = `translate3d(${Math.round(pos.current.x)}px, ${Math.round(pos.current.y)}px, 0)`;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [item, cursorRef, rowRef, panelBoundsRef]);
+
   if (!item) return null;
-  const tipH = 140;
-  const tipW = 210;
-  const gap = 14;
-  const finalY = sideY === "below" ? y + gap : y - tipH - gap;
-  const finalX = sideX === "right" ? x + gap : x - tipW - gap;
 
   return (
-    <div className="fixed z-[100] bg-white border border-border rounded-xl shadow-2xl p-3.5 min-w-[200px] pointer-events-none"
-      style={{ left: finalX, top: finalY, transition: "left 0.7s cubic-bezier(0.22, 1, 0.36, 1), top 0.7s cubic-bezier(0.22, 1, 0.36, 1)" }}>
+    <div ref={ref} className="fixed top-0 left-0 z-[100] bg-white border border-border rounded-xl shadow-2xl p-3.5 min-w-[200px] pointer-events-none"
+      style={{ opacity: 0, transition: "opacity 0.3s ease", willChange: "transform" }}>
       <p className="text-sm font-bold flex items-center gap-1.5 mb-2">{item.icon || item.flag || ""} {item.name}</p>
       <div className="space-y-1">
         <div className="flex justify-between text-xs gap-6">
@@ -257,7 +315,7 @@ function PanelTooltip({ item, isKeyword, isExitLink, x, y, sideX, sideY }: {
 function DataRow({ item, maxVal, sort, type, onFilter, isGeo, isKeyword, isExitLink, selected, dimmed, onClick, onHoverItem, rowIdx }: {
   item: any; maxVal: number; sort: SortMode; type: FilterType; onFilter: (f: ActiveFilter) => void;
   isGeo?: boolean; isKeyword?: boolean; isExitLink?: boolean; selected?: boolean; dimmed?: boolean; onClick?: () => void;
-  onHoverItem?: (item: any | null, idx?: number, enterX?: number, panelRect?: DOMRect) => void; rowIdx?: number;
+  onHoverItem?: (item: any | null, idx?: number, enterX?: number, panelRect?: DOMRect, rowBounds?: { top: number; bottom: number }) => void; rowIdx?: number;
 }) {
   const [hovered, setHovered] = useState(false);
   const pctV = Math.min((item.visitors / maxVal) * 70, 70);
@@ -278,11 +336,16 @@ function DataRow({ item, maxVal, sort, type, onFilter, isGeo, isKeyword, isExitL
     <div className="relative"
       onMouseEnter={(e) => {
         setHovered(true);
-        const panel = (e.currentTarget as HTMLElement).closest("[data-panel]");
+        const rowEl = e.currentTarget as HTMLElement;
+        const panel = rowEl.closest("[data-panel]");
         const rect = panel?.getBoundingClientRect();
-        onHoverItem?.(item, rowIdx, e.clientX, rect as DOMRect);
+        // Anchor Y to this row's edges (not the cursor Y) — the tooltip sits a
+        // gap below/above the whole row, so the cursor (which lives inside the
+        // row) always keeps clearance from it once it settles.
+        const rowRect = rowEl.getBoundingClientRect();
+        onHoverItem?.(item, rowIdx, e.clientX, rect as DOMRect, { top: rowRect.top, bottom: rowRect.bottom });
       }}
-      onMouseLeave={() => { setHovered(false); onHoverItem?.(null); }}>
+      onMouseLeave={() => { setHovered(false); }}>
       <div onClick={onClick}
         className={`flex items-center gap-2 px-4 py-2.5 transition-colors cursor-pointer border-b border-border last:border-0 group ${
           selected ? "bg-accent-light/60" : dimmed ? "opacity-40 hover:opacity-70" : "hover:bg-blue-50/40"
@@ -647,26 +710,28 @@ export default function AnalyticsPage() {
   // bottom panel is now a separate component (BottomPanel)
 
   // -- shared tooltip state --------------------------------------------------
+  // The live cursor lives in a ref so moving the mouse never re-renders the
+  // page — the tooltip reads it each animation frame and eases toward it.
+  const cursorRef = useRef({ x: 0, y: 0 });
+  const rowRef = useRef({ top: 0, bottom: 0 });                      // active row's top/bottom edges (vertical anchor)
+  const panelBoundsRef = useRef({ left: 0, right: 0, top: 0, bottom: 0 }); // active panel's bounds (clamp + flip)
   const [tipItem, setTipItem] = useState<any>(null);
-  const [tipPos, setTipPos] = useState({ x: 0, y: 0 });
   const [tipKeyword, setTipKeyword] = useState(false);
   const [tipExitLink, setTipExitLink] = useState(false);
-  const [tipSideX, setTipSideX] = useState<"left" | "right">("right");
-  const [tipSideY, setTipSideY] = useState<"above" | "below">("below");
 
   const handlePanelMouseMove = useCallback((e: React.MouseEvent) => {
-    setTipPos({ x: e.clientX, y: e.clientY });
+    cursorRef.current = { x: e.clientX, y: e.clientY };
   }, []);
-  const handleRowHover = useCallback((it: any, idx?: number, enterX?: number, panelRect?: DOMRect, isKw?: boolean, isExit?: boolean) => {
+  const handleRowHover = useCallback((it: any, idx?: number, enterX?: number, panelRect?: DOMRect, isKw?: boolean, isExit?: boolean, rowBounds?: { top: number; bottom: number }) => {
     setTipItem(it);
     setTipKeyword(!!isKw);
     setTipExitLink(!!isExit);
     if (it && idx != null) {
-      setTipSideY(idx < 5 ? "below" : "above");
-      if (enterX != null && panelRect) {
-        const panelMid = (panelRect.left + panelRect.right) / 2;
-        setTipSideX(enterX < panelMid ? "right" : "left");
-      }
+      if (enterX != null) cursorRef.current.x = enterX;
+      if (rowBounds) rowRef.current = rowBounds;
+      if (panelRect) panelBoundsRef.current = {
+        left: panelRect.left, right: panelRect.right, top: panelRect.top, bottom: panelRect.bottom,
+      };
     }
   }, []);
 
@@ -949,7 +1014,7 @@ export default function AnalyticsPage() {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 mb-5" onMouseMove={handlePanelMouseMove} onMouseLeave={() => setTipItem(null)}>
 
         {/* ---- SOURCES panel ---- */}
-        <div data-panel className="rounded-xl border border-border bg-white overflow-visible relative">
+        <div data-panel onMouseLeave={() => setTipItem(null)} className="rounded-xl border border-border bg-white overflow-visible relative">
           <PanelHeader
             tabs={["Channel", "Referrer", "Campaign", "Keyword"]}
             active={rT}
@@ -1007,7 +1072,7 @@ export default function AnalyticsPage() {
                   maxVal={Math.max(...refD().map(x => x.visitors))}
                   sort={rS} type={refType()} onFilter={addF}
                   isKeyword={rT === "Keyword"}
-                  onHoverItem={(it, idx, ex, pr) => handleRowHover(it, idx, ex, pr, rT === "Keyword")} />
+                  onHoverItem={(it, idx, ex, pr, ey) => handleRowHover(it, idx, ex, pr, rT === "Keyword", false, ey)} />
               ))}
               <button onClick={() => setModal("ref")}
                 className="w-full py-2 text-xs text-muted-foreground hover:text-accent flex items-center justify-center gap-1">
@@ -1018,7 +1083,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* ---- GEOGRAPHY panel ---- */}
-        <div data-panel className="rounded-xl border border-border bg-white overflow-visible relative">
+        <div data-panel onMouseLeave={() => setTipItem(null)} className="rounded-xl border border-border bg-white overflow-visible relative">
           <PanelHeader
             tabs={["Map", "Country", "Region", "City"]}
             active={gT}
@@ -1099,7 +1164,7 @@ export default function AnalyticsPage() {
                     sort={gS} type={geoType()} onFilter={addF}
                     isGeo selected={isSelected} dimmed={isDimmed}
                     onClick={() => handleGeoClick(c)}
-                    onHoverItem={(it, idx, ex, pr) => handleRowHover(it, idx, ex, pr)} />
+                    onHoverItem={(it, idx, ex, pr, ey) => handleRowHover(it, idx, ex, pr, false, false, ey)} />
                 );
               })}
             </>
@@ -1111,7 +1176,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* ---- PAGES panel ---- */}
-        <div data-panel className="rounded-xl border border-border bg-white overflow-visible relative">
+        <div data-panel onMouseLeave={() => setTipItem(null)} className="rounded-xl border border-border bg-white overflow-visible relative">
           <PanelHeader
             tabs={["Hostname", "Page", "Entry page", "Exit link"]}
             active={pT}
@@ -1126,7 +1191,7 @@ export default function AnalyticsPage() {
               sort={pT === "Exit link" ? "visitors" : pS}
               type={pageType()} onFilter={addF}
               isExitLink={pT === "Exit link"}
-              onHoverItem={(it, idx, ex, pr) => handleRowHover(it, idx, ex, pr, false, pT === "Exit link")} />
+              onHoverItem={(it, idx, ex, pr, ey) => handleRowHover(it, idx, ex, pr, false, pT === "Exit link", ey)} />
           ))}
           <button onClick={() => setModal("page")}
             className="w-full py-2 text-xs text-muted-foreground hover:text-accent flex items-center justify-center gap-1">
@@ -1135,7 +1200,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* ---- TECHNOLOGY panel ---- */}
-        <div data-panel className="rounded-xl border border-border bg-white overflow-visible relative">
+        <div data-panel onMouseLeave={() => setTipItem(null)} className="rounded-xl border border-border bg-white overflow-visible relative">
           <PanelHeader
             tabs={["Browser", "OS", "Device"]}
             active={tT}
@@ -1148,7 +1213,7 @@ export default function AnalyticsPage() {
             <DataRow key={b.name} item={b} rowIdx={i}
               maxVal={Math.max(...techD().map(x => x.visitors))}
               sort={tS} type={techType()} onFilter={addF}
-              onHoverItem={(it, idx, ex, pr) => handleRowHover(it, idx, ex, pr)} />
+              onHoverItem={(it, idx, ex, pr, ey) => handleRowHover(it, idx, ex, pr, false, false, ey)} />
           ))}
           <button onClick={() => setModal("tech")}
             className="w-full py-2 text-xs text-muted-foreground hover:text-accent flex items-center justify-center gap-1">
@@ -1157,7 +1222,7 @@ export default function AnalyticsPage() {
         </div>
 
         {/* Shared floating tooltip */}
-        <PanelTooltip item={tipItem} isKeyword={tipKeyword} isExitLink={tipExitLink} x={tipPos.x} y={tipPos.y} sideX={tipSideX} sideY={tipSideY} />
+        <PanelTooltip item={tipItem} isKeyword={tipKeyword} isExitLink={tipExitLink} cursorRef={cursorRef} rowRef={rowRef} panelBoundsRef={panelBoundsRef} />
       </div>
 
       {/* ================================================================ */}
