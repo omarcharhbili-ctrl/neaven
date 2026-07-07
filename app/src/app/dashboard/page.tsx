@@ -1,277 +1,214 @@
-"use client";
-
-import { Button } from "@/components/Button";
+import { desc, eq } from "drizzle-orm";
 import {
-  Bot,
-  Eye,
-  ArrowRight,
-  TrendingUp,
-  Clock,
   CheckCircle2,
-  AlertTriangle,
-  ArrowUpRight,
-  Calendar,
-  Target,
-  Zap,
+  Circle,
+  Eye,
   BarChart3,
-  MessageSquare,
+  Workflow,
+  Sparkles,
 } from "lucide-react";
+import { redirect } from "next/navigation";
 import Link from "next/link";
+import { db } from "@/db";
+import { progressItems, subAgentSummaries, tips } from "@/db/schema";
+import { getFounder } from "@/lib/founder";
+import { getOrCreateDailyBrief, type BriefItem } from "@/lib/agents/brief";
 
-function StatCard({ label, value, sub, trend, icon: Icon }: {
-  label: string;
-  value: string;
-  sub: string;
-  trend?: "up" | "down" | "neutral";
-  icon: React.ElementType;
-}) {
-  return (
-    <div className="p-5 rounded-xl border border-border bg-white hover:shadow-sm transition-shadow">
-      <div className="flex items-center justify-between mb-3">
-        <div className="w-9 h-9 rounded-lg bg-surface flex items-center justify-center">
-          <Icon className="w-4 h-4 text-muted-foreground" />
-        </div>
-        {trend === "up" && (
-          <span className="text-xs text-success flex items-center gap-0.5">
-            <TrendingUp className="w-3 h-3" /> +12%
-          </span>
-        )}
-      </div>
-      <p className="text-2xl font-bold">{value}</p>
-      <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
-      <p className="text-xs text-muted-foreground mt-1">{sub}</p>
-    </div>
-  );
-}
+export const dynamic = "force-dynamic";
 
-function CofounderInsight({ priority, title, description, action, actionHref }: {
-  priority: "high" | "medium" | "low";
-  title: string;
-  description: string;
-  action: string;
-  actionHref: string;
-}) {
-  const colors = {
-    high: "bg-orange-50 border-orange-200",
-    medium: "bg-blue-50 border-blue-200",
-    low: "bg-surface border-border",
-  };
-  const badges = {
-    high: "bg-accent text-white",
-    medium: "bg-blue-500 text-white",
-    low: "bg-muted text-muted-foreground",
-  };
+const AGENT_ICON = {
+  watcher: Eye,
+  analytics: BarChart3,
+  automation: Workflow,
+} as const;
 
-  return (
-    <div className={`p-4 rounded-xl border ${colors[priority]}`}>
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center shrink-0 mt-0.5">
-            <Bot className="w-3.5 h-3.5 text-white" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2 mb-1">
-              <span className={`text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded ${badges[priority]}`}>
-                {priority}
-              </span>
-            </div>
-            <p className="text-sm font-medium">{title}</p>
-            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{description}</p>
-          </div>
-        </div>
-        <Link href={actionHref}>
-          <Button variant="ghost" size="sm" className="shrink-0 text-xs">
-            {action}
-            <ArrowRight className="w-3 h-3" />
-          </Button>
-        </Link>
-      </div>
-    </div>
-  );
-}
+const KIND_LABEL: Record<BriefItem["kind"], string> = {
+  task: "Today",
+  next_step: "Next",
+  handled: "Handled",
+  news: "News",
+};
 
-function ActivityItem({ time, text, type }: {
-  time: string;
-  text: string;
-  type: "watcher" | "cofounder" | "system";
-}) {
-  const icons = {
-    watcher: <Eye className="w-3.5 h-3.5 text-purple-500" />,
-    cofounder: <Bot className="w-3.5 h-3.5 text-accent" />,
-    system: <Zap className="w-3.5 h-3.5 text-muted-foreground" />,
-  };
+export default async function DashboardPage() {
+  const founder = await getFounder();
+  if (!founder) redirect("/login");
+
+  const [brief, founderTips, summaries, progress] = await Promise.all([
+    getOrCreateDailyBrief(founder),
+    db.query.tips.findMany({
+      where: eq(tips.founderId, founder.id),
+      orderBy: desc(tips.updatedAt),
+      limit: 8,
+    }),
+    db.query.subAgentSummaries.findMany({
+      where: eq(subAgentSummaries.founderId, founder.id),
+      orderBy: desc(subAgentSummaries.createdAt),
+      limit: 8,
+      columns: { payload: false },
+    }),
+    db.query.progressItems.findMany({
+      where: eq(progressItems.founderId, founder.id),
+      orderBy: desc(progressItems.updatedAt),
+      limit: 8,
+    }),
+  ]);
+
+  const briefItems = brief.items as BriefItem[];
+  const firstName = founder.name?.split(" ")[0] ?? "there";
 
   return (
-    <div className="flex items-start gap-3 py-3 border-b border-border last:border-0">
-      <div className="w-7 h-7 rounded-full bg-surface flex items-center justify-center shrink-0 mt-0.5">
-        {icons[type]}
-      </div>
-      <div className="flex-1">
-        <p className="text-sm">{text}</p>
-        <p className="text-xs text-muted-foreground mt-0.5">{time}</p>
-      </div>
-    </div>
-  );
-}
-
-function TaskItem({ title, status, priority }: {
-  title: string;
-  status: "todo" | "in-progress" | "done";
-  priority: "high" | "medium" | "low";
-}) {
-  const statusColors = {
-    todo: "bg-muted text-muted-foreground",
-    "in-progress": "bg-blue-100 text-blue-700",
-    done: "bg-green-100 text-green-700",
-  };
-  const statusLabels = {
-    todo: "To do",
-    "in-progress": "In progress",
-    done: "Done",
-  };
-  const priorityDots = {
-    high: "bg-error",
-    medium: "bg-warning",
-    low: "bg-muted-foreground",
-  };
-
-  return (
-    <div className="flex items-center gap-3 py-2.5 border-b border-border last:border-0">
-      <div className={`w-1.5 h-1.5 rounded-full ${priorityDots[priority]}`} />
-      <p className="text-sm flex-1">{title}</p>
-      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${statusColors[status]}`}>
-        {statusLabels[status]}
-      </span>
-    </div>
-  );
-}
-
-export default function DashboardPage() {
-  return (
-    <div className="p-6 max-w-6xl mx-auto">
-      {/* Header */}
-      <div className="flex items-start justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold">Good morning, Omar</h1>
-          <p className="text-sm text-muted-foreground mt-1">
-            Here&apos;s what to focus on today.
-          </p>
-        </div>
-        <div className="flex items-center gap-3">
-          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-xs font-medium border border-green-200">
-            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse-dot" />
-            On track
-          </div>
-          <div className="text-xs text-muted-foreground flex items-center gap-1">
-            <Calendar className="w-3.5 h-3.5" />
-            June 24, 2026
-          </div>
-        </div>
+    <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
+      <div>
+        <h1 className="text-xl font-semibold">Good morning, {firstName}.</h1>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Here&apos;s where things stand today.
+        </p>
       </div>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <StatCard icon={Target} label="Sprint progress" value="68%" sub="Day 5 of 10" trend="up" />
-        <StatCard icon={CheckCircle2} label="Tasks completed" value="12/18" sub="4 in review" />
-        <StatCard icon={Clock} label="Days to deadline" value="36" sub="July 30, 2026" />
-        <StatCard icon={BarChart3} label="Focus score" value="8.2" sub="Above average" trend="up" />
-      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        {/* Daily brief */}
+        <section className="lg:col-span-2 rounded-xl border border-border bg-white">
+          <div className="flex items-center gap-2 px-5 py-4 border-b border-border">
+            <Sparkles className="w-4 h-4 text-accent" />
+            <h2 className="text-sm font-medium">Today&apos;s brief</h2>
+            <span className="ml-auto text-xs text-muted-foreground">
+              {brief.briefDate}
+            </span>
+          </div>
+          <ul className="divide-y divide-border">
+            {briefItems.map((item, i) => (
+              <li key={i} className="flex items-start gap-3 px-5 py-3.5">
+                {item.done || item.kind === "handled" ? (
+                  <CheckCircle2 className="w-4 h-4 mt-0.5 text-success shrink-0" />
+                ) : (
+                  <Circle className="w-4 h-4 mt-0.5 text-border shrink-0" />
+                )}
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-medium">{item.title}</p>
+                    <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
+                      {KIND_LABEL[item.kind] ?? item.kind}
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
+                    {item.detail}
+                  </p>
+                </div>
+              </li>
+            ))}
+          </ul>
+          <div className="px-5 py-3 border-t border-border">
+            <Link
+              href="/cofounder"
+              className="text-xs text-accent hover:underline"
+            >
+              Talk it through with your co-founder →
+            </Link>
+          </div>
+        </section>
 
-      {/* Co-founder insights */}
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold flex items-center gap-2">
-            <Bot className="w-5 h-5 text-accent" />
-            Co-founder insights
-          </h2>
-          <Link href="/cofounder">
-            <Button variant="ghost" size="sm">
-              Open chat
-              <ArrowRight className="w-3 h-3" />
-            </Button>
-          </Link>
-        </div>
-        <div className="space-y-3">
-          <CofounderInsight
-            priority="high"
-            title="Finish auth flow before switching tasks"
-            description="Your brief says auth is the launch blocker. I noticed you started on the settings page — that's not on the critical path. Suggest: finish the login/signup flow first."
-            action="View brief"
-            actionHref="/brief"
-          />
-          <CofounderInsight
-            priority="medium"
-            title="3 prompts drifted from the brief yesterday"
-            description="During your last coding session, 3 prompts were unrelated to any roadmap item. The Watcher flagged them — want to review?"
-            action="Review"
-            actionHref="/watcher"
-          />
-          <CofounderInsight
-            priority="low"
-            title="Weekly progress update ready"
-            description="You completed 8 tasks this week, refactored the API layer, and are on pace for the July 30 deadline. Full report available."
-            action="View report"
-            actionHref="/cofounder"
-          />
-        </div>
-      </div>
+        {/* Watcher patterns — reads tips only, never raw logs */}
+        <section className="rounded-xl border border-border bg-white">
+          <div className="flex items-center gap-2 px-5 py-4 border-b border-border">
+            <Eye className="w-4 h-4 text-foreground/70" />
+            <h2 className="text-sm font-medium">Patterns</h2>
+          </div>
+          {founderTips.length ? (
+            <ul className="divide-y divide-border">
+              {founderTips.map((tip) => (
+                <li key={tip.id} className="px-5 py-3">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded ${
+                        tip.category === "quality"
+                          ? "bg-accent-light text-accent"
+                          : tip.category === "drift"
+                            ? "bg-muted text-warning"
+                            : "bg-muted text-muted-foreground"
+                      }`}
+                    >
+                      {tip.category}
+                    </span>
+                    {tip.occurrences > 1 && (
+                      <span className="text-[10px] text-muted-foreground">
+                        ×{tip.occurrences}
+                      </span>
+                    )}
+                  </div>
+                  <p className="mt-1 text-xs leading-relaxed">{tip.pattern}</p>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="px-5 py-8 text-xs text-muted-foreground text-center">
+              No recurring patterns yet. They&apos;ll appear as the Watcher
+              observes your sessions and PRs.
+            </p>
+          )}
+        </section>
 
-      {/* Bottom grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Tasks */}
-        <div className="rounded-xl border border-border bg-white p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold">Today&apos;s tasks</h3>
-            <span className="text-xs text-muted-foreground">From your brief</span>
+        {/* Agent activity */}
+        <section className="lg:col-span-2 rounded-xl border border-border bg-white">
+          <div className="px-5 py-4 border-b border-border">
+            <h2 className="text-sm font-medium">Agent activity</h2>
           </div>
-          <div>
-            <TaskItem title="Complete login page UI" status="done" priority="high" />
-            <TaskItem title="Implement auth API routes" status="in-progress" priority="high" />
-            <TaskItem title="Add email verification flow" status="todo" priority="high" />
-            <TaskItem title="Write auth unit tests" status="todo" priority="medium" />
-            <TaskItem title="Update API documentation" status="todo" priority="low" />
-          </div>
-        </div>
+          {summaries.length ? (
+            <ul className="divide-y divide-border">
+              {summaries.map((s) => {
+                const Icon = AGENT_ICON[s.agent];
+                return (
+                  <li key={s.id} className="flex items-start gap-3 px-5 py-3">
+                    <Icon className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm leading-relaxed">{s.summary}</p>
+                      <p className="mt-0.5 text-[11px] text-muted-foreground">
+                        {s.agent} · {s.significance} ·{" "}
+                        {new Date(s.createdAt).toLocaleDateString()}
+                      </p>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          ) : (
+            <p className="px-5 py-8 text-xs text-muted-foreground text-center">
+              Quiet so far. Sub-agents report here when something is worth
+              surfacing — not on a schedule.
+            </p>
+          )}
+        </section>
 
-        {/* Activity feed */}
-        <div className="rounded-xl border border-border bg-white p-5">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold">Recent activity</h3>
-            <span className="text-xs text-muted-foreground">Last 24h</span>
+        {/* Progress */}
+        <section className="rounded-xl border border-border bg-white">
+          <div className="px-5 py-4 border-b border-border">
+            <h2 className="text-sm font-medium">Progress</h2>
           </div>
-          <div>
-            <ActivityItem
-              type="cofounder"
-              text="Morning briefing sent: 3 priorities for today"
-              time="8:00 AM"
-            />
-            <ActivityItem
-              type="watcher"
-              text="Coding session detected — monitoring started"
-              time="9:15 AM"
-            />
-            <ActivityItem
-              type="watcher"
-              text="Prompt refined: added context from brief before send"
-              time="9:23 AM"
-            />
-            <ActivityItem
-              type="watcher"
-              text="Drift alert: prompt unrelated to roadmap"
-              time="10:45 AM"
-            />
-            <ActivityItem
-              type="cofounder"
-              text="Mid-day check: 'You're 2 tasks ahead of yesterday's pace'"
-              time="12:30 PM"
-            />
-            <ActivityItem
-              type="system"
-              text="Brief updated: deadline confirmed July 30"
-              time="Yesterday"
-            />
-          </div>
-        </div>
+          {progress.length ? (
+            <ul className="divide-y divide-border">
+              {progress.map((p) => (
+                <li key={p.id} className="flex items-center gap-2.5 px-5 py-2.5">
+                  <span
+                    className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                      p.status === "done"
+                        ? "bg-success"
+                        : p.status === "in_flight"
+                          ? "bg-warning"
+                          : "bg-border"
+                    }`}
+                  />
+                  <p className="text-xs truncate">{p.item}</p>
+                  <span className="ml-auto text-[10px] text-muted-foreground shrink-0">
+                    {p.status.replace("_", " ")}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="px-5 py-8 text-xs text-muted-foreground text-center">
+              Progress items appear as you and your co-founder track work.
+            </p>
+          )}
+        </section>
       </div>
     </div>
   );

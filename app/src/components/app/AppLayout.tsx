@@ -19,6 +19,7 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { useState, ReactNode } from "react";
+import { UserButton, useUser } from "@clerk/nextjs";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
@@ -37,6 +38,7 @@ const bottomItems = [
 export function AppLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const { user } = useUser();
 
   return (
     <div className="h-screen flex bg-white overflow-hidden">
@@ -100,13 +102,15 @@ export function AppLayout({ children }: { children: ReactNode }) {
             );
           })}
           <div className={`flex items-center gap-3 px-3 py-2 ${collapsed ? "justify-center" : ""}`}>
-            <div className="w-7 h-7 rounded-full bg-accent text-white flex items-center justify-center text-xs font-bold shrink-0">
-              O
-            </div>
+            <UserButton />
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">Omar</p>
-                <p className="text-xs text-muted-foreground truncate">Free plan</p>
+                <p className="text-sm font-medium truncate">
+                  {user?.firstName ?? user?.fullName ?? "Account"}
+                </p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user?.primaryEmailAddress?.emailAddress ?? ""}
+                </p>
               </div>
             )}
           </div>

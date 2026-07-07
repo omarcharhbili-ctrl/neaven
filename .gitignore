@@ -38,3 +38,5 @@ yarn-error.log*
 secrets/
 **/secrets/
 *.pem
+# External clone (activepieces) — not part of this repo
+automation/
