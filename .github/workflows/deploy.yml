@@ -48,11 +48,14 @@ jobs:
           SERVER_SSH_PORT: ${{ secrets.SERVER_SSH_PORT }}
         run: |
           PORT="${SERVER_SSH_PORT:-22}"
+          # --delete keeps the server tree in sync, but `secrets/` lives ONLY on
+          # the server (the .pem is never in git) — exclude it so it survives.
           rsync -az --delete \
             --exclude '.git' \
             --exclude 'node_modules' \
             --exclude '.next' \
-            -e "ssh -p $PORT -i ~/.ssh/deploy_key" \
+            --exclude 'secrets/' \
+            -e "ssh -p $PORT -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new" \
             ./ "$SERVER_USER@$SERVER_HOST:~/neaven-web/"
 
       - name: Build and restart the app container
@@ -62,12 +65,20 @@ jobs:
           SERVER_SSH_PORT: ${{ secrets.SERVER_SSH_PORT }}
         run: |
           PORT="${SERVER_SSH_PORT:-22}"
-          ssh -p "$PORT" -i ~/.ssh/deploy_key "$SERVER_USER@$SERVER_HOST" bash -s <<'EOF'
+          ssh -p "$PORT" -i ~/.ssh/deploy_key -o StrictHostKeyChecking=accept-new "$SERVER_USER@$SERVER_HOST" bash -s <<'EOF'
             set -euo pipefail
             cd ~/neaven-web
-            # Ensure the shared network exists (created by the core stack).
-            docker network inspect neaven_shared >/dev/null 2>&1 || \
-              docker network create neaven_shared
+            # The core stack must be up — we ATTACH to its networks, never create them.
+            for net in neaven_default neaven_shared; do
+              docker network inspect "$net" >/dev/null 2>&1 || {
+                echo "::error::Network '$net' missing — is the core stack running?"; exit 1;
+              }
+            done
+            # The GitHub App key is mounted from here; a missing file would make
+            # Docker silently bind-mount an empty directory instead. Fail loudly.
+            if [ ! -f secrets/github-private-key.pem ]; then
+              echo "::error::secrets/github-private-key.pem not found on server — place it before deploying."; exit 1
+            fi
             docker compose -f docker-compose.prod.yml up -d --build
             docker image prune -f
           EOF

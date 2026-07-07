@@ -3,10 +3,7 @@
 # This is an independent Docker Compose project ("neaven-web"). It deliberately
 # does NOT define or touch Caddy, Postgres, Redis, PR-Agent or Activepieces —
 # those run from their own compose files on the server and are left untouched.
-#
-# The app joins the pre-existing external `neaven_shared` network so Caddy can
-# be pointed at container `neaven-web` later (routing config is a separate,
-# manual change — this file never edits the Caddyfile).
+# It only *attaches* to the pre-existing external networks they created.
 services:
   web:
     build:
@@ -14,17 +11,42 @@ services:
     image: neaven-web:latest
     container_name: neaven-web
     restart: unless-stopped
-    # Runtime env is written to app/.env on the server by the deploy workflow
-    # from the PROD_ENV_FILE GitHub secret. Not committed to git.
+    # App API keys (Anthropic, Groq, Clerk, Resend, GitHub App IDs, …) come from
+    # app/.env, written on the server from the PROD_ENV_FILE GitHub secret.
     env_file:
       - ./app/.env
-    # Bound to loopback only — not publicly exposed. Reachable by Caddy over the
-    # shared network by container name, and locally for smoke tests.
+    environment:
+      # --- Datastore wiring to the core stack (~/neaven/docker-compose.yml) ---
+      # `postgres` and `redis` resolve by container name over neaven_default.
+      # Set here (not in the env file) so the correct in-network hostnames always
+      # win, even if a stale localhost value is present in PROD_ENV_FILE.
+      #
+      # ⚠️  SECURITY: `changethispassword` is a PLACEHOLDER. It matches the
+      #     current production Postgres password (POSTGRES_PASSWORD in
+      #     ~/neaven/docker-compose.yml). Rotate BOTH to a real secret before
+      #     this progresses — do not ship real traffic on this credential.
+      DATABASE_URL: "postgresql://neaven:changethispassword@postgres:5432/neaven_db"
+      REDIS_URL: "redis://redis:6379"
+    volumes:
+      # GitHub App private key — mounted from the server, same pattern PR-Agent
+      # uses for its .secrets.toml (host file → container path, read-only).
+      # Place the key at ~/neaven-web/secrets/github-private-key.pem on the server.
+      # Container path matches GITHUB_APP_PRIVATE_KEY_PATH=./secrets/github-private-key.pem
+      # (the app's WORKDIR is /app).
+      - ./secrets/github-private-key.pem:/app/secrets/github-private-key.pem:ro
     ports:
-      - "127.0.0.1:3000:3000"
+      # Loopback only, NOT public. Host port 3001 because PR-Agent already owns
+      # 127.0.0.1:3000. Caddy reaches this container as `neaven-web` over
+      # neaven_shared, so a public route never needs this published port.
+      - "127.0.0.1:3001:3000"
     networks:
-      - neaven_shared
+      - neaven_default # reach postgres + redis by container name
+      - neaven_shared # let Caddy route to this container by name
 
+# Both networks are created and owned by the core/PR-Agent stacks. We attach as
+# external — this file never creates or mutates them.
 networks:
+  neaven_default:
+    external: true
   neaven_shared:
     external: true
