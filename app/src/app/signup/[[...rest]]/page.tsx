@@ -1,51 +1,29 @@
 import { SignUp } from "@clerk/nextjs";
 import Link from "next/link";
-import { ArrowLeft } from "lucide-react";
+import { Wordmark } from "@/components/app/Shell";
 import { clerkAppearance } from "@/lib/clerk-appearance";
 
 export default function SignupPage() {
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Left panel — ink */}
-      <div className="hidden flex-col justify-between bg-foreground p-12 lg:flex lg:w-1/2">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2 text-[13px] text-white/60 transition-colors hover:text-white"
-        >
-          <ArrowLeft className="h-3.5 w-3.5" strokeWidth={2} />
-          Back to home
-        </Link>
-        <div>
-          <p className="flex items-baseline gap-1.5 select-none">
-            <span className="text-[15px] font-semibold tracking-[-0.02em] text-white">
-              neaven
-            </span>
-            <span className="inline-block h-[6px] w-[6px] rounded-full bg-accent" />
-          </p>
-          <h1 className="mt-5 font-serif text-[34px] italic leading-[1.2] tracking-[-0.01em] text-white">
-            A co-founder
-            <br />
-            <span className="text-white/50">that pushes back.</span>
-          </h1>
-          <p className="mt-5 max-w-md text-[13.5px] leading-relaxed text-white/40">
-            Neaven holds full context on your vision, progress, code, and
-            revenue — and argues with you when a decision contradicts your own
-            goals. You always have the final say.
-          </p>
-        </div>
-        <p className="text-[11px] text-white/25">© 2026 Neaven</p>
+    <div className="relative flex min-h-screen flex-col items-center justify-center bg-background px-6">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            "radial-gradient(560px 320px at 50% 38%, rgba(217,164,65,0.07), transparent 70%)",
+        }}
+      />
+      <Link href="/" className="relative mb-8">
+        <Wordmark />
+      </Link>
+      <div className="relative">
+        <SignUp path="/signup" signInUrl="/login" appearance={clerkAppearance} />
       </div>
-
-      {/* Right panel — auth */}
-      <div className="flex flex-1 items-center justify-center p-8">
-        <div className="w-full max-w-sm">
-          <Link href="/" className="mb-8 flex items-baseline gap-1.5 select-none lg:hidden">
-            <span className="text-[17px] font-semibold tracking-[-0.02em]">neaven</span>
-            <span className="inline-block h-[6px] w-[6px] rounded-full bg-accent" />
-          </Link>
-          <SignUp path="/signup" signInUrl="/login" appearance={clerkAppearance} />
-        </div>
-      </div>
+      <p className="relative mt-8 max-w-xs text-center font-mono text-[11px] leading-relaxed text-faint-foreground">
+        First step: set your vision baseline. Everything Neaven argues from
+        hangs off it.
+      </p>
     </div>
   );
 }

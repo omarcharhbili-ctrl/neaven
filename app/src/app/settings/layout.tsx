@@ -1,5 +1,5 @@
-import { AppLayout } from "@/components/app/AppLayout";
+import { Shell } from "@/components/app/Shell";
 
-export default function SettingsLayout({ children }: { children: React.ReactNode }) {
-  return <AppLayout>{children}</AppLayout>;
+export default function Layout({ children }: { children: React.ReactNode }) {
+  return <Shell>{children}</Shell>;
 }

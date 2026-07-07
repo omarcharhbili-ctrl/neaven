@@ -1,0 +1,94 @@
+diff --git a/packages/server/api/src/app/flags/theme.ts b/packages/server/api/src/app/flags/theme.ts
+index 00a5c17e..82c8cda9 100644
+--- a/packages/server/api/src/app/flags/theme.ts
++++ b/packages/server/api/src/app/flags/theme.ts
+@@ -72,10 +72,43 @@ export function generateTheme({
+     }
+ }
+ 
++// Neaven branding — graphite primary, brass accents, inline SVG marks
++// (data URIs so no asset pipeline or CDN is involved).
++const NEAVEN_FULL_LOGO =
++    'data:image/svg+xml,' +
++    encodeURIComponent(
++        '<svg xmlns="http://www.w3.org/2000/svg" width="128" height="32" viewBox="0 0 128 32"><text x="0" y="23" font-family="Arial, sans-serif" font-size="21" font-weight="700" letter-spacing="-0.5" fill="#1F262E">neaven</text><circle cx="78" cy="20" r="4" fill="#D9A441"/></svg>',
++    )
++const NEAVEN_ICON =
++    'data:image/svg+xml,' +
++    encodeURIComponent(
++        '<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#1F262E"/><circle cx="16" cy="16" r="6" fill="#D9A441"/></svg>',
++    )
++
+ export const defaultTheme = generateTheme({
+-    primaryColor: '#6e41e2',
+-    websiteName: 'Activepieces',
+-    fullLogoUrl: 'https://cdn.activepieces.com/brand/full-logo.png',
+-    favIconUrl: 'https://cdn.activepieces.com/brand/logo.svg',
+-    logoIconUrl: 'https://cdn.activepieces.com/brand/logo.svg',
++    primaryColor: '#1F262E',
++    websiteName: 'Neaven Automations',
++    fullLogoUrl: NEAVEN_FULL_LOGO,
++    favIconUrl: NEAVEN_ICON,
++    logoIconUrl: NEAVEN_ICON,
++    themeColors: {
++        avatar: '#1F262E',
++        'blue-link': '#8A6D2A',
++        danger: '#C24A3D',
++        primary: {
++            dark: '#161C23',
++            light: '#F3EFE6',
++            medium: '#D9A441',
++        },
++        warn: {
++            default: '#B57F1E',
++            light: '#F8F1E1',
++            dark: '#8A6D2A',
++        },
++        success: {
++            default: '#3E8E63',
++            light: '#5FA980',
++        },
++        selection: '#E9DFC8',
++    },
+ })
+diff --git a/packages/web/src/styles.css b/packages/web/src/styles.css
+index fcc8a13e..9e62c24b 100644
+--- a/packages/web/src/styles.css
++++ b/packages/web/src/styles.css
+@@ -471,9 +471,9 @@
+     --ring: theme('colors.neutral.400');
+     --radius: 0.5rem;
+ 
+-    --primary-100: 257 75% 85%;
+-    --primary: 257 74% 57%;
+-    --primary-300: 257 74% 25%;
++    --primary-100: 41 45% 85%;
++    --primary: 213 19% 15%;
++    --primary-300: 41 65% 40%;
+     --primary-foreground: 210 20% 98%;
+ 
+     /* Success — Emerald */
+@@ -557,9 +557,9 @@
+     --accent: theme('colors.neutral.700');
+     --accent-foreground: theme('colors.neutral.50');
+ 
+-    --primary-100: 210 80% 40%;
+-    --primary: 210 90% 50%;
+-    --primary-300: 210 100% 85%;
++    --primary-100: 41 45% 35%;
++    --primary: 41 65% 55%;
++    --primary-300: 41 65% 85%;
+     --primary-foreground: 210 90% 98%;
+ 
+     --success: var(--success-400);
+@@ -957,8 +957,8 @@
+ 
+ /* ── Password strength bolt glow ── */
+ @keyframes boltGlow {
+-  0%   { filter: drop-shadow(0 0 4px rgba(196, 167, 255, 0.5)); }
+-  100% { filter: drop-shadow(0 0 10px rgb(110, 65, 226)); }
++  0%   { filter: drop-shadow(0 0 4px rgba(217, 164, 65, 0.5)); }
++  100% { filter: drop-shadow(0 0 10px rgb(217, 164, 65)); }
+ }
+ 
+ /* ── Shiki dual theme (light/dark) ── */

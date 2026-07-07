@@ -1,24 +1,36 @@
 import type { Metadata } from "next";
-import { Instrument_Sans, Newsreader, JetBrains_Mono } from "next/font/google";
+import {
+  IBM_Plex_Sans,
+  IBM_Plex_Mono,
+  Space_Grotesk,
+  Newsreader,
+} from "next/font/google";
 import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
-const instrument = Instrument_Sans({
-  variable: "--font-instrument",
+const plex = IBM_Plex_Sans({
+  variable: "--font-plex",
   subsets: ["latin"],
-});
-
-// The agent's voice — reasoning traces and anything Neaven "thinks".
-const newsreader = Newsreader({
-  variable: "--font-newsreader",
-  subsets: ["latin"],
-  style: ["normal", "italic"],
   weight: ["400", "500", "600"],
 });
 
-const jetbrains = JetBrains_Mono({
-  variable: "--font-jetbrains",
+const plexMono = IBM_Plex_Mono({
+  variable: "--font-plex-mono",
   subsets: ["latin"],
+  weight: ["400", "500"],
+});
+
+const grotesk = Space_Grotesk({
+  variable: "--font-grotesk",
+  subsets: ["latin"],
+  weight: ["500", "600", "700"],
+});
+
+// Loaded only for the preserved analytics page (its verified serif voice).
+const newsreader = Newsreader({
+  variable: "--font-newsreader",
+  subsets: ["latin"],
+  style: ["italic"],
   weight: ["400", "500"],
 });
 
@@ -37,7 +49,7 @@ export default function RootLayout({
     <ClerkProvider>
       <html
         lang="en"
-        className={`${instrument.variable} ${newsreader.variable} ${jetbrains.variable} h-full antialiased`}
+        className={`${plex.variable} ${plexMono.variable} ${grotesk.variable} ${newsreader.variable} h-full antialiased`}
       >
         <body className="min-h-full flex flex-col font-sans">{children}</body>
       </html>

@@ -42,3 +42,4 @@ next-env.d.ts
 
 # local verification drivers (contain dev-instance test creds)
 browser-verify*.cjs
+verify-lib.cjs

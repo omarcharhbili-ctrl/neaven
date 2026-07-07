@@ -5,7 +5,8 @@
 # no source patching, no commercial embed SDK.
 services:
   activepieces:
-    image: ghcr.io/activepieces/activepieces:0.66.5
+    # Built from /automation source with Neaven branding (theme.ts, styles.css)
+    image: neaven-automation:dev
     container_name: neaven-automation-engine
     restart: unless-stopped
     ports:
@@ -23,9 +24,11 @@ services:
       AP_REDIS_PORT: "6379"
       AP_TELEMETRY_ENABLED: "false"
     volumes:
-      # This image serves the frontend with nginx from /usr/share/nginx/html;
-      # a real file there is served before the SPA fallback.
-      - ./bridge/embed-bridge.html:/usr/share/nginx/html/embed-bridge.html:ro
+      # The source-built image serves the frontend via fastify-static from
+      # dist/packages/web; a real file there is served before the SPA fallback.
+      - ./bridge/embed-bridge.html:/usr/src/app/dist/packages/web/embed-bridge.html:ro
+      # LF copy of the entrypoint — the Windows checkout baked CRLF into the image
+      - ./docker-entrypoint.sh:/usr/src/app/docker-entrypoint.sh:ro
     depends_on:
       - postgres
       - redis

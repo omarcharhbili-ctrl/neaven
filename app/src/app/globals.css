@@ -1,56 +1,98 @@
 @import "tailwindcss";
 
 /* ---------------------------------------------------------------------------
-   Neaven design system — "ink & paper"
+   Neaven design system — "graphite & brass"
 
-   Calm authority. Warm paper surfaces, deep green-ink text, one viridian
-   accent used sparingly. Hairline borders, almost no shadows. The interface
-   is quiet so the founder's work — and the agent's judgment — is loud.
+   A night console for founders: deep graphite surfaces, warm off-white ink,
+   one brass accent spent carefully. Dense, engineered, quiet. The agent's
+   reasoning renders as a live console feed — mono, dim, alive.
 --------------------------------------------------------------------------- */
 
 :root {
-  /* Paper — warm, not clinical */
+  /* Graphite surfaces */
+  --background: #0e1116;
+  --raised: #151b22;
+  --higher: #1b232c;
+  --surface: #151b22; /* alias used by shared components */
+
+  /* Warm ink */
+  --foreground: #e9e7e2;
+  --secondary-foreground: #a9aeb6;
+  --muted-foreground: #6e7681;
+  --faint-foreground: #4b535d;
+
+  /* Hairlines */
+  --border: #222a33;
+  --border-strong: #303a45;
+
+  /* Brass — the one loud thing */
+  --accent: #d9a441;
+  --accent-hover: #e5b558;
+  --on-accent: #14100a;
+  --accent-soft: rgba(217, 164, 65, 0.14);
+  --accent-faint: rgba(217, 164, 65, 0.07);
+
+  /* Signals */
+  --success: #4caf7d;
+  --success-soft: rgba(76, 175, 125, 0.14);
+  --warning: #e07a3f;
+  --warning-soft: rgba(224, 122, 63, 0.14);
+  --danger: #e25d4f;
+  --danger-soft: rgba(226, 93, 79, 0.14);
+  --info: #6b9bd1;
+  --info-soft: rgba(107, 155, 209, 0.14);
+
+  /* Legacy aliases still referenced by shared plumbing */
+  --muted: #1b232c;
+  --accent-light: rgba(217, 164, 65, 0.14);
+  --primary: #e9e7e2;
+  --primary-light: #cfccc5;
+  --error: #e25d4f;
+}
+
+/* ---------------------------------------------------------------------------
+   Paper theme — SCOPED to the analytics route only. Analytics was verified
+   on the previous light system and is preserved byte-for-byte; this block
+   carries the exact token values it was verified against.
+--------------------------------------------------------------------------- */
+.theme-paper {
   --background: #faf9f6;
   --surface: #f4f2ed;
   --raised: #ffffff;
-
-  /* Ink — deep green-black, not default slate */
+  --higher: #ffffff;
   --foreground: #1a2620;
   --secondary-foreground: #4b5852;
   --muted-foreground: #79857e;
   --faint-foreground: #a8b1ab;
-
-  /* Hairlines */
   --border: #e5e1d8;
   --border-strong: #d2cdc1;
-
-  /* Viridian — the agent's color. Primary actions, active states, presence. */
   --accent: #14705c;
   --accent-hover: #0d5a49;
+  --on-accent: #ffffff;
   --accent-soft: #e3efe9;
   --accent-faint: #f0f6f2;
-
-  /* Signals — considered, desaturated */
   --success: #2e7d4f;
+  --success-soft: #e7f2ec;
   --warning: #a16207;
   --warning-soft: #faf3e3;
   --danger: #b3382c;
   --danger-soft: #f9ecea;
   --info: #44618b;
   --info-soft: #ecf1f7;
-
-  /* Legacy token aliases (existing screens reference these) */
   --muted: #edebe4;
   --accent-light: #e3efe9;
   --primary: #1a2620;
   --primary-light: #2c3a33;
   --error: #b3382c;
+  background: var(--background);
+  color: var(--foreground);
 }
 
 @theme inline {
   --color-background: var(--background);
-  --color-surface: var(--surface);
   --color-raised: var(--raised);
+  --color-higher: var(--higher);
+  --color-surface: var(--surface);
   --color-foreground: var(--foreground);
   --color-secondary-foreground: var(--secondary-foreground);
   --color-muted-foreground: var(--muted-foreground);
@@ -59,32 +101,33 @@
   --color-border-strong: var(--border-strong);
   --color-accent: var(--accent);
   --color-accent-hover: var(--accent-hover);
+  --color-on-accent: var(--on-accent);
   --color-accent-soft: var(--accent-soft);
   --color-accent-faint: var(--accent-faint);
   --color-success: var(--success);
+  --color-success-soft: var(--success-soft);
   --color-warning: var(--warning);
   --color-warning-soft: var(--warning-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
   --color-info: var(--info);
   --color-info-soft: var(--info-soft);
-  /* Legacy aliases */
   --color-muted: var(--muted);
   --color-accent-light: var(--accent-light);
   --color-primary: var(--primary);
   --color-primary-light: var(--primary-light);
   --color-error: var(--error);
 
-  --font-sans: var(--font-instrument), system-ui, sans-serif;
+  --font-sans: var(--font-plex), system-ui, sans-serif;
+  --font-display: var(--font-grotesk), var(--font-plex), sans-serif;
   --font-serif: var(--font-newsreader), Georgia, serif;
-  --font-mono: var(--font-jetbrains), ui-monospace, monospace;
+  --font-mono: var(--font-plex-mono), ui-monospace, monospace;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: var(--font-instrument), system-ui, sans-serif;
-  font-feature-settings: "cv11", "ss01";
+  font-family: var(--font-plex), system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -103,10 +146,17 @@ body {
 }
 
 /* ---------------------------------------------------------------------------
-   The agent's voice — reasoning traces, briefs, anything Neaven "says
-   in its own head" is set in serif italic. Thought, not chrome.
+   The agent's voice — reasoning renders as a console feed: mono, dim, alive.
+   (Analytics keeps the serif voice it was verified with.)
 --------------------------------------------------------------------------- */
 .agent-voice {
+  font-family: var(--font-plex-mono), ui-monospace, monospace;
+  font-size: 12.5px;
+  line-height: 1.75;
+  color: color-mix(in oklab, var(--secondary-foreground) 78%, var(--accent) 22%);
+  letter-spacing: 0.01em;
+}
+.theme-paper .agent-voice {
   font-family: var(--font-newsreader), Georgia, serif;
   font-style: italic;
   font-size: 0.875rem;
@@ -115,20 +165,22 @@ body {
   letter-spacing: 0.005em;
 }
 
+/* Display type */
+.font-display {
+  font-family: var(--font-grotesk), var(--font-plex), sans-serif;
+}
+
 /* ---------------------------------------------------------------------------
-   Motion — small moments, never noise. 150–200ms, ease-out, done.
+   Motion — precise, 140–220ms, no bounce.
 --------------------------------------------------------------------------- */
 
 @keyframes rise-in {
-  from { opacity: 0; transform: translateY(3px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
-.animate-rise {
-  animation: rise-in 0.22s cubic-bezier(0.21, 0.47, 0.32, 0.98) both;
-}
+.animate-rise { animation: rise-in 0.2s cubic-bezier(0.2, 0.6, 0.3, 1) both; }
 
-/* Thinking shimmer — the one signature animation. A soft sweep across the
-   "Thinking" label while the agent reasons. */
+/* Signature: the thinking sweep — brass light moving through dim mono text */
 @keyframes thinking-sweep {
   from { background-position: 150% 0; }
   to { background-position: -50% 0; }
@@ -144,10 +196,9 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
-  animation: thinking-sweep 1.8s linear infinite;
+  animation: thinking-sweep 1.6s linear infinite;
 }
 
-/* Cursor blink for streaming text */
 @keyframes cursor-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0; }
@@ -155,35 +206,27 @@ body {
 .stream-cursor::after {
   content: "";
   display: inline-block;
-  width: 2px;
-  height: 1em;
-  margin-left: 2px;
+  width: 7px;
+  height: 1.05em;
+  margin-left: 3px;
   vertical-align: text-bottom;
   background: var(--accent);
   animation: cursor-pulse 1s step-end infinite;
 }
 
-/* Legacy animation names kept for existing screens */
+/* Legacy names kept so nothing crashes if referenced */
 @keyframes fade-in {
   from { opacity: 0; transform: translateY(6px); }
   to { opacity: 1; transform: translateY(0); }
 }
-@keyframes slide-up {
-  from { opacity: 0; transform: translateY(14px); }
-  to { opacity: 1; transform: translateY(0); }
-}
-@keyframes pulse-dot {
-  0%, 100% { opacity: 1; }
-  50% { opacity: 0.4; }
-}
-.animate-fade-in { animation: fade-in 0.4s ease-out forwards; }
-.animate-slide-up { animation: slide-up 0.45s ease-out forwards; }
-.animate-pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
-.stagger-1 { animation-delay: 0.06s; opacity: 0; }
-.stagger-2 { animation-delay: 0.12s; opacity: 0; }
-.stagger-3 { animation-delay: 0.18s; opacity: 0; }
-.stagger-4 { animation-delay: 0.24s; opacity: 0; }
-.stagger-5 { animation-delay: 0.3s; opacity: 0; }
+.animate-fade-in { animation: fade-in 0.35s ease-out forwards; }
+.animate-slide-up { animation: fade-in 0.4s ease-out forwards; }
+.animate-pulse-dot { animation: cursor-pulse 2s ease-in-out infinite; }
+.stagger-1 { animation-delay: 0.05s; opacity: 0; }
+.stagger-2 { animation-delay: 0.1s; opacity: 0; }
+.stagger-3 { animation-delay: 0.15s; opacity: 0; }
+.stagger-4 { animation-delay: 0.2s; opacity: 0; }
+.stagger-5 { animation-delay: 0.25s; opacity: 0; }
 
 @media (prefers-reduced-motion: reduce) {
   .animate-rise, .animate-fade-in, .animate-slide-up,
