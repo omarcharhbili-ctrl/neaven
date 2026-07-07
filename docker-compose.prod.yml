@@ -21,11 +21,12 @@ services:
       # Set here (not in the env file) so the correct in-network hostnames always
       # win, even if a stale localhost value is present in PROD_ENV_FILE.
       #
-      # ⚠️  SECURITY: `changethispassword` is a PLACEHOLDER. It matches the
-      #     current production Postgres password (POSTGRES_PASSWORD in
-      #     ~/neaven/docker-compose.yml). Rotate BOTH to a real secret before
-      #     this progresses — do not ship real traffic on this credential.
-      DATABASE_URL: "postgresql://neaven:changethispassword@postgres:5432/neaven_db"
+      # DB credential. Must match the `neaven` role password set via ALTER USER
+      # in the production Postgres, and POSTGRES_PASSWORD in ~/neaven/docker-compose.yml.
+      # NOTE: this is a real secret living in a (private) git repo. To take it out
+      # of git later, switch to ${POSTGRES_PASSWORD} interpolation sourced from a
+      # server-side .env — see the deploy notes.
+      DATABASE_URL: "postgresql://neaven:ofQ2OZIOTzH0Nh7pSwMTEGlyFixos4Nz0M6TmEHF@postgres:5432/neaven_db"
       REDIS_URL: "redis://redis:6379"
     volumes:
       # GitHub App private key — mounted from the server, same pattern PR-Agent
