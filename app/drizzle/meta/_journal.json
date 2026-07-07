@@ -8,6 +8,13 @@
       "when": 1783398062401,
       "tag": "0000_slimy_tyrannus",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1783405852285,
+      "tag": "0001_spooky_reaper",
+      "breakpoints": true
     }
   ]
 }

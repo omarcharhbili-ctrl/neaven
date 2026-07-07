@@ -2,6 +2,7 @@ import { NextRequest } from "next/server";
 import { db } from "@/db";
 import { founders } from "@/db/schema";
 import { clusterFindingsIntoTips } from "@/lib/agents/watcher";
+import { scanTraffic } from "@/lib/agents/analytics";
 import { getOrCreateDailyBrief } from "@/lib/agents/brief";
 
 export const maxDuration = 300;
@@ -20,13 +21,23 @@ export async function POST(req: NextRequest) {
     return new Response("Unauthorized", { status: 401 });
   }
 
+  // Optional ?day=YYYY-MM-DD points the analytics scan at a past day (backfill).
+  const day = req.nextUrl.searchParams.get("day") ?? undefined;
+
   const all = await db.select().from(founders);
   const results = [];
   for (const founder of all) {
     try {
       const clustering = await clusterFindingsIntoTips(founder.id);
+      const scan = await scanTraffic(founder.id, day);
       await getOrCreateDailyBrief(founder);
-      results.push({ founderId: founder.id, ...clustering, brief: true });
+      results.push({
+        founderId: founder.id,
+        ...clustering,
+        analyticsPushed: scan.pushed,
+        analyticsSummary: scan.summary,
+        brief: true,
+      });
     } catch (err) {
       console.error(`nightly job failed for founder ${founder.id}:`, err);
       results.push({ founderId: founder.id, error: true });

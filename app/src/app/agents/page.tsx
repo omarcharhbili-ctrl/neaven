@@ -123,7 +123,13 @@ export default function AutomationsPage() {
         return;
       }
       // Token travels in the URL fragment — it never reaches any server log.
-      window.open(`${data.url}/embed/callback#token=${data.token}`, "_blank");
+      // /embed-bridge.html is Neaven's page mounted into the engine's frontend
+      // (see automation-engine/bridge/) — it stores the session and hands off.
+      const fragment = new URLSearchParams({
+        token: data.token,
+        ...(data.projectId ? { projectId: data.projectId } : {}),
+      });
+      window.open(`${data.url}/embed-bridge.html#${fragment.toString()}`, "_blank");
     } catch {
       setEngineState("error");
     } finally {

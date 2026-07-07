@@ -1,6 +1,11 @@
-import { and, desc, eq } from "drizzle-orm";
+import { and, desc, eq, gte, lt, sql } from "drizzle-orm";
 import { db } from "@/db";
-import { subAgentSummaries, visionBaselines } from "@/db/schema";
+import {
+  revenueDaily,
+  subAgentSummaries,
+  trafficDaily,
+  visionBaselines,
+} from "@/db/schema";
 import { GROQ_MODELS, groqChat, groqJson } from "@/lib/llm/groq";
 
 /**
@@ -56,6 +61,62 @@ export async function evaluateMetrics(
     payload: snapshot as unknown as Record<string, unknown>,
   });
   return { pushed: true, summary: verdict.summary };
+}
+
+/**
+ * Scan one day of traffic/revenue against the trailing week and let the agent
+ * decide if it's worth surfacing. Runs nightly for yesterday; can be pointed
+ * at any past day to backfill (e.g. a launch spike).
+ */
+export async function scanTraffic(
+  founderId: string,
+  day?: string,
+): Promise<{ pushed: boolean; summary?: string }> {
+  const target =
+    day ??
+    new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
+  const weekAgo = new Date(new Date(target).getTime() - 7 * 24 * 60 * 60 * 1000)
+    .toISOString()
+    .slice(0, 10);
+
+  const [dayRow] = await db
+    .select()
+    .from(trafficDaily)
+    .where(and(eq(trafficDaily.founderId, founderId), eq(trafficDaily.day, target)));
+  if (!dayRow) return { pushed: false };
+
+  const [trailing] = await db
+    .select({
+      visitors: sql<number>`round(avg(${trafficDaily.visitors}))`,
+      pageviews: sql<number>`round(avg(${trafficDaily.pageviews}))`,
+    })
+    .from(trafficDaily)
+    .where(
+      and(
+        eq(trafficDaily.founderId, founderId),
+        gte(trafficDaily.day, weekAgo),
+        lt(trafficDaily.day, target),
+      ),
+    );
+
+  const [rev] = await db
+    .select()
+    .from(revenueDaily)
+    .where(and(eq(revenueDaily.founderId, founderId), eq(revenueDaily.day, target)));
+
+  return evaluateMetrics(founderId, {
+    periodLabel: `${target} vs trailing 7-day average`,
+    current: {
+      visitors: dayRow.visitors,
+      pageviews: dayRow.pageviews,
+      mrr_dollars: rev ? Math.round(rev.mrrCents / 100) : 0,
+    },
+    previous: {
+      visitors: Number(trailing?.visitors ?? 0),
+      pageviews: Number(trailing?.pageviews ?? 0),
+      mrr_dollars: rev ? Math.round((rev.mrrCents - rev.newMrrCents + rev.churnedMrrCents) / 100) : 0,
+    },
+  });
 }
 
 /** Founder-facing Q&A over their metrics (used by the analytics tab). */

@@ -1,0 +1,45 @@
+<!doctype html>
+<!--
+  Neaven -> Activepieces silent-auth bridge.
+
+  Served same-origin by the Activepieces frontend (volume-mounted into
+  dist/packages/web), so it can write the session the AP client reads
+  (localStorage keys `token` / `projectId` — see
+  packages/web/src/lib/authentication-session.ts in the MIT core).
+
+  Neaven opens:  /embed-bridge.html#token=<jwt>&projectId=<id>
+  The token travels in the URL FRAGMENT, which browsers never send to any
+  server. This page stores it and hands off to the app router.
+-->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Connecting…</title>
+    <style>
+      html { background: #faf9f6; }
+      body {
+        margin: 0; height: 100vh; display: flex; align-items: center;
+        justify-content: center; font-family: system-ui, sans-serif;
+        color: #79857e; font-size: 14px;
+      }
+    </style>
+  </head>
+  <body>
+    <p id="msg">Connecting your workspace…</p>
+    <script>
+      (function () {
+        var params = new URLSearchParams(location.hash.slice(1));
+        var token = params.get("token");
+        var projectId = params.get("projectId");
+        if (!token) {
+          document.getElementById("msg").textContent =
+            "Missing session — open the builder from Neaven's Automations page.";
+          return;
+        }
+        localStorage.setItem("token", token);
+        if (projectId) localStorage.setItem("projectId", projectId);
+        location.replace("/");
+      })();
+    </script>
+  </body>
+</html>

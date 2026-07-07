@@ -329,6 +329,66 @@ export const dailyBriefs = pgTable(
 );
 
 // ---------------------------------------------------------------------------
+// Metrics — the Analytics sub-agent's raw material. Daily web traffic,
+// dimensional breakdowns, and revenue. The agent reads these; the analytics
+// page charts them.
+// ---------------------------------------------------------------------------
+
+export const breakdownKind = pgEnum("breakdown_kind", [
+  "source",
+  "page",
+  "country",
+  "device",
+]);
+
+export const trafficDaily = pgTable(
+  "traffic_daily",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    founderId: uuid("founder_id")
+      .notNull()
+      .references(() => founders.id, { onDelete: "cascade" }),
+    day: date("day").notNull(),
+    visitors: integer("visitors").notNull(),
+    pageviews: integer("pageviews").notNull(),
+    avgSessionSecs: integer("avg_session_secs").notNull(),
+    bounceRate: integer("bounce_rate").notNull(), // percent, 0–100
+  },
+  (t) => [uniqueIndex("traffic_daily_founder_day_idx").on(t.founderId, t.day)],
+);
+
+export const trafficBreakdown = pgTable(
+  "traffic_breakdown",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    founderId: uuid("founder_id")
+      .notNull()
+      .references(() => founders.id, { onDelete: "cascade" }),
+    day: date("day").notNull(),
+    kind: breakdownKind("kind").notNull(),
+    key: text("key").notNull(),
+    visitors: integer("visitors").notNull(),
+  },
+  (t) => [index("traffic_breakdown_idx").on(t.founderId, t.kind, t.day)],
+);
+
+export const revenueDaily = pgTable(
+  "revenue_daily",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    founderId: uuid("founder_id")
+      .notNull()
+      .references(() => founders.id, { onDelete: "cascade" }),
+    day: date("day").notNull(),
+    mrrCents: integer("mrr_cents").notNull(),
+    newMrrCents: integer("new_mrr_cents").notNull(),
+    churnedMrrCents: integer("churned_mrr_cents").notNull(),
+    customers: integer("customers").notNull(),
+  },
+  (t) => [uniqueIndex("revenue_daily_founder_day_idx").on(t.founderId, t.day)],
+);
+
+// ---------------------------------------------------------------------------
 // Memory notes — plain-language memory (argument outcomes, preferences).
 // No numeric scores: tone self-calibrates from accumulated context.
 // ---------------------------------------------------------------------------
