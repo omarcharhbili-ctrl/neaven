@@ -1,21 +1,22 @@
-// Shared Clerk appearance — keeps the auth UI inside Neaven's calm, restrained
-// design language instead of Clerk's defaults.
+// Clerk appearance — keeps the auth UI inside Neaven's ink & paper system.
 export const clerkAppearance = {
   variables: {
-    colorPrimary: "#0f172a",
-    colorText: "#1a1a1a",
-    colorTextSecondary: "#737373",
+    colorPrimary: "#14705c",
+    colorText: "#1a2620",
+    colorTextSecondary: "#79857e",
     colorBackground: "#ffffff",
-    colorInputBackground: "#fafafa",
-    colorInputText: "#1a1a1a",
-    borderRadius: "0.5rem",
-    fontFamily: "var(--font-geist-sans), system-ui, sans-serif",
+    colorInputBackground: "#faf9f6",
+    colorInputText: "#1a2620",
+    colorDanger: "#b3382c",
+    borderRadius: "0.625rem",
+    fontFamily: "var(--font-instrument), system-ui, sans-serif",
   },
   elements: {
-    card: "shadow-none border border-[#e5e5e5]",
-    headerTitle: "text-lg",
+    card: "shadow-none border border-[#e5e1d8]",
+    headerTitle: "text-[17px] tracking-[-0.01em]",
     formButtonPrimary:
-      "bg-[#0f172a] hover:bg-[#1e293b] text-sm normal-case shadow-none",
-    footerActionLink: "text-[#f97316] hover:text-[#f97316]",
+      "bg-[#14705c] hover:bg-[#0d5a49] text-[13px] font-medium normal-case shadow-none",
+    footerActionLink: "text-[#14705c] hover:text-[#0d5a49]",
+    formFieldInput: "border-[#e5e1d8]",
   },
 } as const;

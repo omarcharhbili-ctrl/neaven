@@ -31,7 +31,7 @@ function BriefSection({ icon: Icon, title, children, editable = true }: {
   const [editing, setEditing] = useState(false);
 
   return (
-    <div className="p-5 rounded-xl border border-border bg-white group">
+    <div className="p-5 rounded-xl border border-border bg-raised group">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Icon className="w-4 h-4 text-accent" />
@@ -81,7 +81,7 @@ function OKRItem({ objective, keyResults, progress }: {
             <div key={kr.text} className="flex items-center gap-3">
               <div className="w-12 h-1 bg-muted rounded-full overflow-hidden">
                 <div
-                  className={`h-full rounded-full ${kr.progress >= 100 ? "bg-success" : "bg-blue-400"}`}
+                  className={`h-full rounded-full ${kr.progress >= 100 ? "bg-success" : "bg-info/70"}`}
                   style={{ width: `${Math.min(kr.progress, 100)}%` }}
                 />
               </div>
@@ -185,7 +185,7 @@ export default function BriefPage() {
             </div>
             <div className="flex items-center justify-between p-3 rounded-lg bg-surface">
               <div className="flex items-center gap-3">
-                <div className="w-2 h-2 rounded-full bg-blue-500" />
+                <div className="w-2 h-2 rounded-full bg-info-soft0" />
                 <div>
                   <p className="text-sm font-medium">Public Launch</p>
                   <p className="text-xs text-muted-foreground">Marketing, onboarding, pricing</p>

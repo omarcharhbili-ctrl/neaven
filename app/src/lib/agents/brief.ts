@@ -48,7 +48,7 @@ export async function getOrCreateDailyBrief(founder: Founder) {
       model: MAIN_AGENT_MODEL,
       max_tokens: 2000,
       system:
-        "You are Neaven, the founder's AI co-founder, writing the morning brief. From the founder's memory, produce 3-6 concrete items for today. Kinds: 'task' (do today), 'next_step' (queued), 'handled' (something the agents already did), 'news' (only if genuinely relevant). Titles are short imperatives; details are one sentence. Never produce an empty list. Respond with ONLY a JSON array: [{\"kind\",\"title\",\"detail\",\"done\":false}]",
+        "You are Neaven, the founder's AI co-founder, writing the morning brief. From the founder's memory, produce 3-6 concrete items for today. Kinds: 'task' (do today), 'next_step' (queued), 'handled' (something the agents already did), 'news' (only if genuinely relevant). Titles are short imperatives; details are one sentence. Write for the founder — never mention internal tool or function names, database fields, or system mechanics. Never produce an empty list. Respond with ONLY a JSON array: [{\"kind\",\"title\",\"detail\",\"done\":false}]",
       messages: [
         {
           role: "user",

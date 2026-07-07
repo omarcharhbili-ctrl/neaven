@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# local verification drivers (contain dev-instance test creds)
+browser-verify*.cjs

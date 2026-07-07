@@ -222,7 +222,11 @@ export async function runMainAgent(
     const stream = anthropic.messages.stream({
       model: MAIN_AGENT_MODEL,
       max_tokens: 12000,
-      thinking: { type: "enabled", budget_tokens: 4000 },
+      // Sonnet 5: adaptive thinking only (budget_tokens is rejected with a 400).
+      // display: "summarized" is required for the visible reasoning trace —
+      // the default ("omitted") streams thinking blocks with EMPTY text.
+      thinking: { type: "adaptive", display: "summarized" },
+      output_config: { effort: "high" },
       system,
       tools,
       messages,
@@ -262,11 +266,16 @@ export async function runMainAgent(
     messages.push({ role: "assistant", content: response.content });
 
     const results = [];
+    const TOOL_LABEL: Record<string, string> = {
+      save_memory_note: "Noted for memory",
+      update_vision: "Updated the vision baseline",
+      update_progress: "Updated progress",
+    };
     for (const tu of toolUses) {
       const label =
         tu.name === "pull_subagent_context"
           ? `Consulted ${(tu.input as { agent?: string }).agent ?? "sub-agent"}`
-          : `Used ${tu.name.replace(/_/g, " ")}`;
+          : (TOOL_LABEL[tu.name] ?? `Used ${tu.name.replace(/_/g, " ")}`);
       reasoning.push({
         type: "consulted",
         agent: (tu.input as { agent?: string }).agent,

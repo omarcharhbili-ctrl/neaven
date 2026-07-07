@@ -165,8 +165,8 @@ function ChatBubble({ message }: { message: Message }) {
                   key={action.label}
                   className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
                     action.variant === "primary"
-                      ? "bg-accent text-white hover:bg-orange-600"
-                      : "bg-white text-foreground border border-border hover:bg-muted"
+                      ? "bg-accent text-white hover:bg-accent"
+                      : "bg-raised text-foreground border border-border hover:bg-muted"
                   }`}
                 >
                   {action.label}
@@ -225,7 +225,7 @@ export default function ManagerPage() {
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="px-6 py-4 border-b border-border bg-white flex items-center justify-between shrink-0">
+      <div className="px-6 py-4 border-b border-border bg-raised flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center">
             <Bot className="w-4.5 h-4.5 text-white" />
@@ -258,7 +258,7 @@ export default function ManagerPage() {
       </div>
 
       {/* Input */}
-      <div className="px-6 py-4 border-t border-border bg-white shrink-0">
+      <div className="px-6 py-4 border-t border-border bg-raised shrink-0">
         <div className="flex items-end gap-3">
           <div className="flex-1 relative">
             <textarea

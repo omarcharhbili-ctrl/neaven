@@ -36,7 +36,7 @@ function ToggleSwitch({ enabled, onChange }: { enabled: boolean; onChange: () =>
       }`}
     >
       <div
-        className={`absolute top-0.5 w-4.5 h-4.5 rounded-full bg-white shadow-sm transition-transform ${
+        className={`absolute top-0.5 w-4.5 h-4.5 rounded-full bg-raised shadow-sm transition-transform ${
           enabled ? "translate-x-5" : "translate-x-0.5"
         }`}
       />
@@ -112,7 +112,7 @@ export default function SettingsPage() {
         {/* Content */}
         <div className="flex-1 min-w-0">
           {activeTab === "profile" && (
-            <div className="rounded-xl border border-border bg-white p-6">
+            <div className="rounded-xl border border-border bg-raised p-6">
               <h2 className="font-semibold mb-6">Profile</h2>
               <div className="flex items-center gap-4 mb-6 pb-6 border-b border-border">
                 <div className="w-16 h-16 rounded-full bg-accent text-white flex items-center justify-center text-xl font-bold">
@@ -143,7 +143,7 @@ export default function SettingsPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium mb-1.5">Role</label>
-                  <select className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent bg-white">
+                  <select className="w-full px-3 py-2 rounded-lg border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent bg-raised">
                     <option>Solo founder</option>
                     <option>Co-founder (technical)</option>
                     <option>Co-founder (non-technical)</option>
@@ -159,7 +159,7 @@ export default function SettingsPage() {
           )}
 
           {activeTab === "notifications" && (
-            <div className="rounded-xl border border-border bg-white p-6">
+            <div className="rounded-xl border border-border bg-raised p-6">
               <h2 className="font-semibold mb-6">Notifications</h2>
               <div className="mb-6">
                 <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">Co-founder notifications</h3>
@@ -189,7 +189,7 @@ export default function SettingsPage() {
           )}
 
           {activeTab === "connections" && (
-            <div className="rounded-xl border border-border bg-white p-6">
+            <div className="rounded-xl border border-border bg-raised p-6">
               <h2 className="font-semibold mb-6">Connections</h2>
               <div className="space-y-3">
                 {[
@@ -228,13 +228,13 @@ export default function SettingsPage() {
           )}
 
           {activeTab === "watcher" && (
-            <div className="rounded-xl border border-border bg-white p-6">
+            <div className="rounded-xl border border-border bg-raised p-6">
               <h2 className="font-semibold mb-6">Watcher settings</h2>
               <SettingRow label="Auto-refine prompts" description="Automatically enrich prompts with context from the brief before sending">
                 <ToggleSwitch enabled={true} onChange={() => {}} />
               </SettingRow>
               <SettingRow label="Drift sensitivity" description="How aggressively to flag off-roadmap work">
-                <select className="px-3 py-1.5 rounded-lg border border-border text-sm bg-white">
+                <select className="px-3 py-1.5 rounded-lg border border-border text-sm bg-raised">
                   <option>Low — only flag major drift</option>
                   <option>Medium — balanced (recommended)</option>
                   <option>High — flag everything off-brief</option>
@@ -244,7 +244,7 @@ export default function SettingsPage() {
                 <ToggleSwitch enabled={true} onChange={() => {}} />
               </SettingRow>
               <SettingRow label="Max loop iterations" description="Maximum iterations before stopping and asking for input">
-                <select className="px-3 py-1.5 rounded-lg border border-border text-sm bg-white">
+                <select className="px-3 py-1.5 rounded-lg border border-border text-sm bg-raised">
                   <option>3 iterations</option>
                   <option>5 iterations</option>
                   <option>10 iterations</option>
@@ -258,7 +258,7 @@ export default function SettingsPage() {
           )}
 
           {activeTab === "billing" && (
-            <div className="rounded-xl border border-border bg-white p-6">
+            <div className="rounded-xl border border-border bg-raised p-6">
               <h2 className="font-semibold mb-6">Billing</h2>
               <div className="p-4 rounded-lg bg-surface border border-border mb-6">
                 <div className="flex items-center justify-between">
@@ -290,7 +290,7 @@ export default function SettingsPage() {
           )}
 
           {activeTab === "security" && (
-            <div className="rounded-xl border border-border bg-white p-6">
+            <div className="rounded-xl border border-border bg-raised p-6">
               <h2 className="font-semibold mb-6">Security</h2>
               <SettingRow label="Change password" description="Last changed 30 days ago">
                 <Button variant="secondary" size="sm">Change</Button>

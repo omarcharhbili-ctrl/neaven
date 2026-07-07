@@ -1,39 +1,63 @@
 "use client";
 
-import { Logo } from "@/components/Logo";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import {
   LayoutDashboard,
-  Brain,
   Eye,
   MessageSquare,
   Settings,
-  ChevronLeft,
-  ChevronRight,
-  Bell,
-  Search,
   BarChart3,
-  Bot,
+  Workflow,
   Plug,
-  HelpCircle,
+  PanelLeftClose,
+  PanelLeft,
 } from "lucide-react";
 import { useState, ReactNode } from "react";
 import { UserButton, useUser } from "@clerk/nextjs";
 
 const navItems = [
-  { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/brief", label: "The Brief", icon: Brain },
-  { href: "/watcher", label: "The Watcher", icon: Eye },
+  { href: "/dashboard", label: "Today", icon: LayoutDashboard },
   { href: "/cofounder", label: "Co-founder", icon: MessageSquare },
+  { href: "/watcher", label: "Watcher", icon: Eye },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/agents", label: "Agents", icon: Bot },
+  { href: "/agents", label: "Automations", icon: Workflow },
   { href: "/connectors", label: "Connectors", icon: Plug },
 ];
 
-const bottomItems = [
-  { href: "/settings", label: "Settings", icon: Settings },
-];
+function NavLink({
+  href,
+  label,
+  icon: Icon,
+  active,
+  collapsed,
+}: {
+  href: string;
+  label: string;
+  icon: typeof LayoutDashboard;
+  active: boolean;
+  collapsed: boolean;
+}) {
+  return (
+    <Link
+      href={href}
+      title={collapsed ? label : undefined}
+      className={`group flex items-center gap-2.5 rounded-lg px-2.5 py-[7px] text-[13.5px] transition-colors duration-150 ${
+        active
+          ? "bg-accent-soft text-accent font-medium"
+          : "text-secondary-foreground hover:bg-surface hover:text-foreground"
+      } ${collapsed ? "justify-center" : ""}`}
+    >
+      <Icon
+        className={`h-4 w-4 shrink-0 transition-colors ${
+          active ? "text-accent" : "text-muted-foreground group-hover:text-foreground"
+        }`}
+        strokeWidth={active ? 2.1 : 1.8}
+      />
+      {!collapsed && <span>{label}</span>}
+    </Link>
+  );
+}
 
 export function AppLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
@@ -41,74 +65,73 @@ export function AppLayout({ children }: { children: ReactNode }) {
   const { user } = useUser();
 
   return (
-    <div className="h-screen flex bg-white overflow-hidden">
+    <div className="h-screen flex bg-background overflow-hidden">
       <aside
         className={`${
-          collapsed ? "w-16" : "w-60"
-        } border-r border-border bg-surface flex flex-col transition-all duration-200 shrink-0`}
+          collapsed ? "w-[60px]" : "w-[224px]"
+        } flex flex-col border-r border-border transition-[width] duration-200 shrink-0`}
       >
-        <div className="h-14 flex items-center justify-between px-4 border-b border-border">
+        {/* Wordmark */}
+        <div
+          className={`flex h-14 items-center ${collapsed ? "justify-center px-0" : "justify-between px-4"}`}
+        >
           {!collapsed && (
-            <Link href="/dashboard">
-              <Logo size="sm" />
+            <Link href="/dashboard" className="flex items-baseline gap-1.5 select-none">
+              <span className="text-[17px] font-semibold tracking-[-0.02em]">
+                neaven
+              </span>
+              <span className="h-[7px] w-[7px] translate-y-[-1px] rounded-full bg-accent inline-block" />
             </Link>
           )}
           <button
             onClick={() => setCollapsed(!collapsed)}
-            className="p-1.5 rounded-md hover:bg-muted text-muted-foreground transition-colors"
+            aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
+            className="rounded-md p-1.5 text-muted-foreground transition-colors hover:bg-surface hover:text-foreground"
           >
-            {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+            {collapsed ? (
+              <PanelLeft className="h-4 w-4" strokeWidth={1.8} />
+            ) : (
+              <PanelLeftClose className="h-4 w-4" strokeWidth={1.8} />
+            )}
           </button>
         </div>
 
-        <nav className="flex-1 p-2 space-y-0.5 overflow-y-auto">
-          {navItems.map((item) => {
-            const active = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  active
-                    ? "bg-primary text-white"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                } ${collapsed ? "justify-center" : ""}`}
-                title={collapsed ? item.label : undefined}
-              >
-                <item.icon className="w-4 h-4 shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
-              </Link>
-            );
-          })}
+        <nav className="flex-1 space-y-0.5 overflow-y-auto px-2.5 pt-2">
+          {navItems.map((item) => (
+            <NavLink
+              key={item.href}
+              {...item}
+              active={pathname.startsWith(item.href)}
+              collapsed={collapsed}
+            />
+          ))}
         </nav>
 
-        <div className="p-2 border-t border-border space-y-0.5">
-          {bottomItems.map((item) => {
-            const active = pathname === item.href;
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors ${
-                  active
-                    ? "bg-primary text-white"
-                    : "text-muted-foreground hover:text-foreground hover:bg-muted"
-                } ${collapsed ? "justify-center" : ""}`}
-                title={collapsed ? item.label : undefined}
-              >
-                <item.icon className="w-4 h-4 shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
-              </Link>
-            );
-          })}
-          <div className={`flex items-center gap-3 px-3 py-2 ${collapsed ? "justify-center" : ""}`}>
-            <UserButton />
+        {/* Account */}
+        <div className="border-t border-border px-2.5 py-2.5 space-y-0.5">
+          <NavLink
+            href="/settings"
+            label="Settings"
+            icon={Settings}
+            active={pathname.startsWith("/settings")}
+            collapsed={collapsed}
+          />
+          <div
+            className={`flex items-center gap-2.5 rounded-lg px-2.5 py-2 ${
+              collapsed ? "justify-center" : ""
+            }`}
+          >
+            <UserButton
+              appearance={{
+                elements: { avatarBox: "h-6 w-6" },
+              }}
+            />
             {!collapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">
+              <div className="min-w-0 flex-1 leading-tight">
+                <p className="truncate text-[13px] font-medium">
                   {user?.firstName ?? user?.fullName ?? "Account"}
                 </p>
-                <p className="text-xs text-muted-foreground truncate">
+                <p className="truncate text-[11.5px] text-muted-foreground">
                   {user?.primaryEmailAddress?.emailAddress ?? ""}
                 </p>
               </div>
@@ -117,30 +140,7 @@ export function AppLayout({ children }: { children: ReactNode }) {
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-14 flex items-center justify-between px-6 border-b border-border bg-white shrink-0">
-          <div className="flex items-center gap-3 flex-1">
-            <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search anything..."
-                className="w-full pl-9 pr-3 py-1.5 rounded-lg border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent bg-surface"
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors relative">
-              <Bell className="w-4 h-4" />
-              <span className="absolute top-1.5 right-1.5 w-1.5 h-1.5 bg-accent rounded-full" />
-            </button>
-            <button className="p-2 rounded-lg hover:bg-muted text-muted-foreground transition-colors">
-              <HelpCircle className="w-4 h-4" />
-            </button>
-          </div>
-        </header>
-        <main className="flex-1 overflow-y-auto">{children}</main>
-      </div>
+      <main className="flex-1 min-w-0 overflow-y-auto">{children}</main>
     </div>
   );
 }

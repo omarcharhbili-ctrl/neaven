@@ -44,7 +44,7 @@ function SessionCard({ agent, branch, duration, prompts, status, alerts }: {
   const s = statusConfig[status];
 
   return (
-    <div className="p-4 rounded-xl border border-border bg-white hover:shadow-sm transition-shadow">
+    <div className="p-4 rounded-xl border border-border bg-raised hover:shadow-sm transition-shadow">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className={`w-2 h-2 rounded-full ${s.color} ${status === "active" ? "animate-pulse-dot" : ""}`} />
@@ -78,8 +78,8 @@ function PromptEvent({ type, time, prompt, refinedPrompt, reason }: {
   reason: string;
 }) {
   const config = {
-    drift: { icon: <AlertTriangle className="w-3.5 h-3.5" />, color: "text-accent bg-orange-50 border-orange-200", label: "Drift detected" },
-    refined: { icon: <Zap className="w-3.5 h-3.5" />, color: "text-blue-600 bg-blue-50 border-blue-200", label: "Prompt refined" },
+    drift: { icon: <AlertTriangle className="w-3.5 h-3.5" />, color: "text-accent bg-accent-soft border-orange-200", label: "Drift detected" },
+    refined: { icon: <Zap className="w-3.5 h-3.5" />, color: "text-info bg-info-soft border-blue-200", label: "Prompt refined" },
     approved: { icon: <CheckCircle2 className="w-3.5 h-3.5" />, color: "text-success bg-green-50 border-green-200", label: "On track" },
     loop: { icon: <RefreshCw className="w-3.5 h-3.5" />, color: "text-purple-600 bg-purple-50 border-purple-200", label: "Agentic loop" },
   };
@@ -103,8 +103,8 @@ function PromptEvent({ type, time, prompt, refinedPrompt, reason }: {
           <p className="text-sm font-mono">{prompt}</p>
         </div>
         {refinedPrompt && (
-          <div className="mt-2 p-3 rounded-lg bg-blue-50 border border-blue-200">
-            <p className="text-xs text-blue-600 mb-1">Refined prompt:</p>
+          <div className="mt-2 p-3 rounded-lg bg-info-soft border border-blue-200">
+            <p className="text-xs text-info mb-1">Refined prompt:</p>
             <p className="text-sm font-mono">{refinedPrompt}</p>
           </div>
         )}
@@ -153,7 +153,7 @@ export default function WatcherPage() {
           { label: "Prompts refined", value: "8", icon: Zap },
           { label: "Drift alerts", value: "3", icon: AlertTriangle },
         ].map((stat) => (
-          <div key={stat.label} className="p-4 rounded-xl border border-border bg-white">
+          <div key={stat.label} className="p-4 rounded-xl border border-border bg-raised">
             <stat.icon className="w-4 h-4 text-muted-foreground mb-2" />
             <p className="text-2xl font-bold">{stat.value}</p>
             <p className="text-xs text-muted-foreground">{stat.label}</p>
@@ -219,7 +219,7 @@ export default function WatcherPage() {
               Filter
             </Button>
           </div>
-          <div className="rounded-xl border border-border bg-white p-4">
+          <div className="rounded-xl border border-border bg-raised p-4">
             <PromptEvent
               type="drift"
               time="10:45 AM"

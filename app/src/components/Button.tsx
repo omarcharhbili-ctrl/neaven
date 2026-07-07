@@ -21,7 +21,7 @@ export function Button({
     primary:
       "bg-primary text-white hover:bg-primary-light shadow-sm",
     secondary:
-      "bg-white text-foreground border border-border hover:bg-muted shadow-sm",
+      "bg-raised text-foreground border border-border hover:bg-muted shadow-sm",
     ghost: "text-muted-foreground hover:text-foreground hover:bg-muted",
     danger: "bg-error text-white hover:bg-red-600",
   };

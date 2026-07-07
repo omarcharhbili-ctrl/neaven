@@ -111,7 +111,7 @@ export default function ConnectorsPage() {
                 {suggestedNotConnected.map((c) => (
                   <button
                     key={c.id}
-                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white border border-orange-200 text-sm hover:border-accent transition-colors"
+                    className="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-raised border border-orange-200 text-sm hover:border-accent transition-colors"
                   >
                     <c.icon className="w-3.5 h-3.5 text-muted-foreground" />
                     {c.name}
@@ -158,7 +158,7 @@ export default function ConnectorsPage() {
         {filtered.map((connector) => (
           <div
             key={connector.id}
-            className={`p-4 rounded-xl border bg-white hover:shadow-sm transition-all group ${
+            className={`p-4 rounded-xl border bg-raised hover:shadow-sm transition-all group ${
               connector.connected ? "border-green-200 bg-green-50/30" : "border-border"
             }`}
           >

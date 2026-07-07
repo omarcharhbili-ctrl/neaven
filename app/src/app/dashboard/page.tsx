@@ -1,11 +1,11 @@
 import { desc, eq } from "drizzle-orm";
 import {
-  CheckCircle2,
-  Circle,
   Eye,
   BarChart3,
   Workflow,
-  Sparkles,
+  Check,
+  MessageSquare,
+  Radio,
 } from "lucide-react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
@@ -16,18 +16,74 @@ import { getOrCreateDailyBrief, type BriefItem } from "@/lib/agents/brief";
 
 export const dynamic = "force-dynamic";
 
-const AGENT_ICON = {
-  watcher: Eye,
-  analytics: BarChart3,
-  automation: Workflow,
-} as const;
+/* ---------------------------------------------------------------------------
+   Today — the morning surface. The daily brief leads; the Watcher's living
+   profile, agent reports, and progress support it. Built to still read
+   clearly when months of findings have piled up: capped lists, ranked
+   patterns, grouped activity.
+--------------------------------------------------------------------------- */
 
-const KIND_LABEL: Record<BriefItem["kind"], string> = {
-  task: "Today",
-  next_step: "Next",
-  handled: "Handled",
-  news: "News",
+const AGENT_ICON = { watcher: Eye, analytics: BarChart3, automation: Workflow } as const;
+
+const KIND_STYLE: Record<BriefItem["kind"], { label: string; cls: string }> = {
+  task: { label: "Today", cls: "bg-accent-soft text-accent" },
+  next_step: { label: "Next", cls: "bg-surface text-secondary-foreground" },
+  handled: { label: "Handled", cls: "bg-surface text-muted-foreground" },
+  news: { label: "News", cls: "bg-info-soft text-info" },
 };
+
+const TIP_STYLE: Record<string, string> = {
+  quality: "bg-danger-soft text-danger",
+  drift: "bg-warning-soft text-warning",
+  stall: "bg-info-soft text-info",
+};
+
+function SectionCard({
+  title,
+  meta,
+  action,
+  children,
+}: {
+  title: string;
+  meta?: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="overflow-hidden rounded-xl border border-border bg-raised shadow-[0_1px_2px_rgba(26,38,32,0.04)]">
+      <div className="flex items-center justify-between border-b border-border px-5 py-3.5">
+        <div className="flex items-baseline gap-2">
+          <h2 className="text-[13.5px] font-semibold tracking-[-0.01em]">{title}</h2>
+          {meta && <span className="text-[11.5px] text-faint-foreground">{meta}</span>}
+        </div>
+        {action}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function EmptyRow({
+  icon: Icon,
+  text,
+  action,
+}: {
+  icon: typeof Eye;
+  text: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-col items-center px-6 py-10 text-center">
+      <div className="rounded-full border border-border bg-surface p-2.5">
+        <Icon className="h-4 w-4 text-muted-foreground" strokeWidth={1.6} />
+      </div>
+      <p className="mt-3 max-w-[260px] text-[12.5px] leading-relaxed text-muted-foreground">
+        {text}
+      </p>
+      {action && <div className="mt-3">{action}</div>}
+    </div>
+  );
+}
 
 export default async function DashboardPage() {
   const founder = await getFounder();
@@ -37,8 +93,8 @@ export default async function DashboardPage() {
     getOrCreateDailyBrief(founder),
     db.query.tips.findMany({
       where: eq(tips.founderId, founder.id),
-      orderBy: desc(tips.updatedAt),
-      limit: 8,
+      orderBy: [desc(tips.occurrences), desc(tips.updatedAt)],
+      limit: 6,
     }),
     db.query.subAgentSummaries.findMany({
       where: eq(subAgentSummaries.founderId, founder.id),
@@ -54,161 +110,230 @@ export default async function DashboardPage() {
   ]);
 
   const briefItems = brief.items as BriefItem[];
-  const firstName = founder.name?.split(" ")[0] ?? "there";
+  const firstName = founder.name?.split(" ")[0];
+  const today = new Date().toLocaleDateString(undefined, {
+    weekday: "long",
+    month: "long",
+    day: "numeric",
+  });
+  const hour = new Date().getHours();
+  const daypart = hour < 12 ? "Morning" : hour < 18 ? "Afternoon" : "Evening";
+
+  // Category distribution for the Watcher's living profile bar.
+  const tipTotals = founderTips.reduce<Record<string, number>>((acc, t) => {
+    acc[t.category] = (acc[t.category] ?? 0) + t.occurrences;
+    return acc;
+  }, {});
+  const tipSum = Object.values(tipTotals).reduce((a, b) => a + b, 0);
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-8 space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold">Good morning, {firstName}.</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          Here&apos;s where things stand today.
+    <div className="mx-auto max-w-[1060px] px-8 py-9">
+      {/* Header */}
+      <header className="animate-rise">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
+          {today}
         </p>
-      </div>
+        <h1 className="mt-1 font-serif text-[27px] italic tracking-[-0.01em]">
+          {daypart}{firstName ? `, ${firstName}` : ""}.
+        </h1>
+      </header>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Daily brief */}
-        <section className="lg:col-span-2 rounded-xl border border-border bg-white">
-          <div className="flex items-center gap-2 px-5 py-4 border-b border-border">
-            <Sparkles className="w-4 h-4 text-accent" />
-            <h2 className="text-sm font-medium">Today&apos;s brief</h2>
-            <span className="ml-auto text-xs text-muted-foreground">
-              {brief.briefDate}
-            </span>
-          </div>
-          <ul className="divide-y divide-border">
-            {briefItems.map((item, i) => (
-              <li key={i} className="flex items-start gap-3 px-5 py-3.5">
-                {item.done || item.kind === "handled" ? (
-                  <CheckCircle2 className="w-4 h-4 mt-0.5 text-success shrink-0" />
-                ) : (
-                  <Circle className="w-4 h-4 mt-0.5 text-border shrink-0" />
-                )}
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-medium">{item.title}</p>
-                    <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted text-muted-foreground">
-                      {KIND_LABEL[item.kind] ?? item.kind}
-                    </span>
-                  </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">
-                    {item.detail}
-                  </p>
-                </div>
-              </li>
-            ))}
-          </ul>
-          <div className="px-5 py-3 border-t border-border">
-            <Link
-              href="/cofounder"
-              className="text-xs text-accent hover:underline"
-            >
-              Talk it through with your co-founder →
-            </Link>
-          </div>
-        </section>
-
-        {/* Watcher patterns — reads tips only, never raw logs */}
-        <section className="rounded-xl border border-border bg-white">
-          <div className="flex items-center gap-2 px-5 py-4 border-b border-border">
-            <Eye className="w-4 h-4 text-foreground/70" />
-            <h2 className="text-sm font-medium">Patterns</h2>
-          </div>
-          {founderTips.length ? (
-            <ul className="divide-y divide-border">
-              {founderTips.map((tip) => (
-                <li key={tip.id} className="px-5 py-3">
-                  <div className="flex items-center gap-2">
+      <div className="mt-7 grid grid-cols-1 gap-5 lg:grid-cols-3">
+        {/* Daily brief — the lead */}
+        <div className="lg:col-span-2">
+          <SectionCard
+            title="The brief"
+            meta={`${briefItems.filter((i) => i.kind === "task").length} for today`}
+            action={
+              <Link
+                href="/cofounder"
+                className="inline-flex items-center gap-1.5 text-[12px] font-medium text-accent transition-colors hover:text-accent-hover"
+              >
+                <MessageSquare className="h-3.5 w-3.5" strokeWidth={2} />
+                Talk it through
+              </Link>
+            }
+          >
+            <ul className="divide-y divide-border/70">
+              {briefItems.map((item, i) => {
+                const style = KIND_STYLE[item.kind] ?? KIND_STYLE.task;
+                const done = item.done || item.kind === "handled";
+                return (
+                  <li key={i} className="flex items-start gap-3.5 px-5 py-3.5">
                     <span
-                      className={`text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded ${
-                        tip.category === "quality"
-                          ? "bg-accent-light text-accent"
-                          : tip.category === "drift"
-                            ? "bg-muted text-warning"
-                            : "bg-muted text-muted-foreground"
+                      className={`mt-[3px] flex h-[18px] w-[18px] shrink-0 items-center justify-center rounded-full border ${
+                        done
+                          ? "border-accent bg-accent text-white"
+                          : "border-border-strong bg-raised"
                       }`}
                     >
-                      {tip.category}
+                      {done && <Check className="h-3 w-3" strokeWidth={3} />}
                     </span>
-                    {tip.occurrences > 1 && (
-                      <span className="text-[10px] text-muted-foreground">
-                        ×{tip.occurrences}
-                      </span>
-                    )}
-                  </div>
-                  <p className="mt-1 text-xs leading-relaxed">{tip.pattern}</p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="px-5 py-8 text-xs text-muted-foreground text-center">
-              No recurring patterns yet. They&apos;ll appear as the Watcher
-              observes your sessions and PRs.
-            </p>
-          )}
-        </section>
-
-        {/* Agent activity */}
-        <section className="lg:col-span-2 rounded-xl border border-border bg-white">
-          <div className="px-5 py-4 border-b border-border">
-            <h2 className="text-sm font-medium">Agent activity</h2>
-          </div>
-          {summaries.length ? (
-            <ul className="divide-y divide-border">
-              {summaries.map((s) => {
-                const Icon = AGENT_ICON[s.agent];
-                return (
-                  <li key={s.id} className="flex items-start gap-3 px-5 py-3">
-                    <Icon className="w-4 h-4 mt-0.5 text-muted-foreground shrink-0" />
                     <div className="min-w-0 flex-1">
-                      <p className="text-sm leading-relaxed">{s.summary}</p>
-                      <p className="mt-0.5 text-[11px] text-muted-foreground">
-                        {s.agent} · {s.significance} ·{" "}
-                        {new Date(s.createdAt).toLocaleDateString()}
+                      <div className="flex items-center gap-2">
+                        <p
+                          className={`text-[13.5px] font-medium ${done ? "text-muted-foreground line-through decoration-border-strong" : ""}`}
+                        >
+                          {item.title}
+                        </p>
+                        <span
+                          className={`shrink-0 rounded-full px-2 py-px text-[10px] font-semibold uppercase tracking-wide ${style.cls}`}
+                        >
+                          {style.label}
+                        </span>
+                      </div>
+                      <p className="mt-0.5 text-[12.5px] leading-relaxed text-muted-foreground">
+                        {item.detail}
                       </p>
                     </div>
                   </li>
                 );
               })}
             </ul>
+          </SectionCard>
+        </div>
+
+        {/* Watcher patterns — living profile, reads from tips only */}
+        <SectionCard
+          title="Patterns"
+          meta={founderTips.length ? `${founderTips.length} recurring` : undefined}
+        >
+          {founderTips.length ? (
+            <>
+              {tipSum > 0 && (
+                <div className="px-5 pt-4">
+                  <div className="flex h-1.5 overflow-hidden rounded-full bg-surface">
+                    {(["quality", "drift", "stall"] as const).map((cat) =>
+                      tipTotals[cat] ? (
+                        <div
+                          key={cat}
+                          style={{ width: `${(tipTotals[cat] / tipSum) * 100}%` }}
+                          className={
+                            cat === "quality"
+                              ? "bg-danger/70"
+                              : cat === "drift"
+                                ? "bg-warning/70"
+                                : "bg-info/70"
+                          }
+                        />
+                      ) : null,
+                    )}
+                  </div>
+                </div>
+              )}
+              <ul className="divide-y divide-border/70">
+                {founderTips.map((tip) => (
+                  <li key={tip.id} className="px-5 py-3">
+                    <div className="flex items-center gap-2">
+                      <span
+                        className={`rounded-full px-2 py-px text-[10px] font-semibold uppercase tracking-wide ${TIP_STYLE[tip.category] ?? "bg-surface text-muted-foreground"}`}
+                      >
+                        {tip.category}
+                      </span>
+                      {tip.occurrences > 1 && (
+                        <span className="font-mono text-[10.5px] text-faint-foreground">
+                          ×{tip.occurrences}
+                        </span>
+                      )}
+                    </div>
+                    <p className="mt-1.5 text-[12.5px] leading-relaxed">{tip.pattern}</p>
+                  </li>
+                ))}
+              </ul>
+            </>
           ) : (
-            <p className="px-5 py-8 text-xs text-muted-foreground text-center">
-              Quiet so far. Sub-agents report here when something is worth
-              surfacing — not on a schedule.
-            </p>
+            <EmptyRow
+              icon={Eye}
+              text="No recurring patterns yet. The Watcher builds this profile from your coding sessions and pull requests."
+              action={
+                <Link
+                  href="/watcher"
+                  className="text-[12px] font-medium text-accent hover:text-accent-hover"
+                >
+                  Set up the Watcher →
+                </Link>
+              }
+            />
           )}
-        </section>
+        </SectionCard>
+
+        {/* Agent activity */}
+        <div className="lg:col-span-2">
+          <SectionCard title="Agent reports" meta={summaries.length ? undefined : "quiet"}>
+            {summaries.length ? (
+              <ul className="divide-y divide-border/70">
+                {summaries.map((s) => {
+                  const Icon = AGENT_ICON[s.agent];
+                  return (
+                    <li key={s.id} className="flex items-start gap-3.5 px-5 py-3">
+                      <span className="mt-0.5 rounded-lg border border-border bg-surface p-1.5">
+                        <Icon className="h-3.5 w-3.5 text-secondary-foreground" strokeWidth={1.8} />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-[13px] leading-relaxed">{s.summary}</p>
+                        <p className="mt-0.5 flex items-center gap-1.5 text-[11px] text-faint-foreground">
+                          <span className="capitalize">{s.agent}</span>
+                          <span>·</span>
+                          <span
+                            className={
+                              s.significance === "anomaly"
+                                ? "font-medium text-warning"
+                                : s.significance === "milestone"
+                                  ? "font-medium text-accent"
+                                  : ""
+                            }
+                          >
+                            {s.significance}
+                          </span>
+                          <span>·</span>
+                          {new Date(s.createdAt).toLocaleDateString(undefined, {
+                            month: "short",
+                            day: "numeric",
+                          })}
+                        </p>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <EmptyRow
+                icon={Radio}
+                text="Quiet is normal. Sub-agents report here when something is worth surfacing — anomalies and milestones, not noise."
+              />
+            )}
+          </SectionCard>
+        </div>
 
         {/* Progress */}
-        <section className="rounded-xl border border-border bg-white">
-          <div className="px-5 py-4 border-b border-border">
-            <h2 className="text-sm font-medium">Progress</h2>
-          </div>
+        <SectionCard title="Progress">
           {progress.length ? (
-            <ul className="divide-y divide-border">
+            <ul className="divide-y divide-border/70">
               {progress.map((p) => (
                 <li key={p.id} className="flex items-center gap-2.5 px-5 py-2.5">
                   <span
-                    className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                    className={`h-[7px] w-[7px] shrink-0 rounded-full ${
                       p.status === "done"
                         ? "bg-success"
                         : p.status === "in_flight"
                           ? "bg-warning"
-                          : "bg-border"
+                          : "bg-border-strong"
                     }`}
                   />
-                  <p className="text-xs truncate">{p.item}</p>
-                  <span className="ml-auto text-[10px] text-muted-foreground shrink-0">
+                  <p className="min-w-0 flex-1 truncate text-[12.5px]">{p.item}</p>
+                  <span className="shrink-0 text-[10.5px] uppercase tracking-wide text-faint-foreground">
                     {p.status.replace("_", " ")}
                   </span>
                 </li>
               ))}
             </ul>
           ) : (
-            <p className="px-5 py-8 text-xs text-muted-foreground text-center">
-              Progress items appear as you and your co-founder track work.
-            </p>
+            <EmptyRow
+              icon={Check}
+              text="Progress fills in as you and Neaven track what's done, in flight, and next."
+            />
           )}
-        </section>
+        </SectionCard>
       </div>
     </div>
   );

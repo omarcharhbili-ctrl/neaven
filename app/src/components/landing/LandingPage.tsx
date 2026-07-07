@@ -27,7 +27,7 @@ import {
 
 function Navbar() {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/80 backdrop-blur-xl border-b border-border">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-raised/80 backdrop-blur-xl border-b border-border">
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         <div className="flex items-center gap-8">
           <Link href="/">
@@ -105,7 +105,7 @@ function AppPreview() {
   return (
     <section className="px-6 pb-20">
       <div className="max-w-5xl mx-auto">
-        <div className="relative rounded-xl border border-border bg-white shadow-2xl shadow-black/5 overflow-hidden animate-slide-up stagger-4">
+        <div className="relative rounded-xl border border-border bg-raised shadow-2xl shadow-black/5 overflow-hidden animate-slide-up stagger-4">
           <div className="flex items-center gap-2 px-4 py-3 border-b border-border bg-surface">
             <div className="flex gap-1.5">
               <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
@@ -169,7 +169,7 @@ function AppPreview() {
                   { label: "Sprint", value: "68%", sub: "Day 5/10" },
                   { label: "Deadline", value: "36d", sub: "Jul 30" },
                 ].map((stat) => (
-                  <div key={stat.label} className="p-3 rounded-xl border border-border bg-white">
+                  <div key={stat.label} className="p-3 rounded-xl border border-border bg-raised">
                     <p className="text-xs text-muted-foreground">{stat.label}</p>
                     <p className="text-xl font-bold text-foreground">{stat.value}</p>
                     <p className="text-xs text-success">{stat.sub}</p>
@@ -230,7 +230,7 @@ function Features() {
       title: "Your project's source of truth.",
       description: "A conversation — not a form — captures what you're building, your goals, and your deadline. Everything else checks against this.",
       features: ["Natural onboarding", "OKR-to-task cascade", "Drift detection", "Living document"],
-      color: "bg-blue-50 text-blue-600 border-blue-200",
+      color: "bg-info-soft text-info border-blue-200",
     },
     {
       icon: <Eye className="w-5 h-5" />,
@@ -246,7 +246,7 @@ function Features() {
       title: "Your AI thinking partner.",
       description: "Not a dashboard you forget to check. A conversational co-founder that gives you morning briefings, mid-session nudges, and daily recaps.",
       features: ["Morning priorities", "Real-time course corrections", "Daily progress recaps", "Slack-like interface"],
-      color: "bg-orange-50 text-orange-600 border-orange-200",
+      color: "bg-accent-soft text-accent border-orange-200",
     },
     {
       icon: <BarChart3 className="w-5 h-5" />,
@@ -288,7 +288,7 @@ function Features() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {features.map((f) => (
-            <div key={f.label} className="group p-6 rounded-2xl border border-border bg-white hover:shadow-lg hover:shadow-black/5 transition-all duration-300">
+            <div key={f.label} className="group p-6 rounded-2xl border border-border bg-raised hover:shadow-lg hover:shadow-black/5 transition-all duration-300">
               <div className={`inline-flex items-center gap-2 px-2.5 py-1 rounded-full text-xs font-medium border mb-4 ${f.color}`}>
                 {f.icon}
                 {f.label}
@@ -353,7 +353,7 @@ function HowItWorks() {
           {steps.map((step, i) => (
             <div key={step.step} className="flex gap-6 group">
               <div className="flex flex-col items-center">
-                <div className="w-10 h-10 rounded-xl bg-white border border-border flex items-center justify-center group-hover:border-accent group-hover:bg-accent-light transition-colors">
+                <div className="w-10 h-10 rounded-xl bg-raised border border-border flex items-center justify-center group-hover:border-accent group-hover:bg-accent-light transition-colors">
                   {step.icon}
                 </div>
                 {i < steps.length - 1 && <div className="w-px h-full bg-border my-2" />}
@@ -463,7 +463,7 @@ function Testimonials() {
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           {testimonials.map((t) => (
-            <div key={t.name} className="p-6 rounded-2xl bg-white border border-border">
+            <div key={t.name} className="p-6 rounded-2xl bg-raised border border-border">
               <p className="text-sm text-foreground leading-relaxed mb-6">&ldquo;{t.quote}&rdquo;</p>
               <div className="flex items-center gap-3">
                 <div className="w-9 h-9 rounded-full bg-primary text-white flex items-center justify-center text-xs font-bold">
@@ -493,7 +493,7 @@ function PricingSection() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <div className="p-6 rounded-2xl border border-border bg-white">
+          <div className="p-6 rounded-2xl border border-border bg-raised">
             <h3 className="font-semibold text-lg">Free</h3>
             <p className="text-muted-foreground text-sm mt-1">For solo builders getting started</p>
             <div className="mt-4 mb-6">
@@ -510,7 +510,7 @@ function PricingSection() {
             <Link href="/signup"><Button variant="secondary" className="w-full">Get started</Button></Link>
           </div>
 
-          <div className="p-6 rounded-2xl border-2 border-accent bg-white relative">
+          <div className="p-6 rounded-2xl border-2 border-accent bg-raised relative">
             <div className="absolute -top-3 right-4 px-2.5 py-0.5 bg-accent text-white text-xs font-medium rounded-full">Popular</div>
             <h3 className="font-semibold text-lg">Pro</h3>
             <p className="text-muted-foreground text-sm mt-1">For serious builders shipping fast</p>
@@ -528,7 +528,7 @@ function PricingSection() {
             <Link href="/signup"><Button className="w-full">Start free trial</Button></Link>
           </div>
 
-          <div className="p-6 rounded-2xl border border-border bg-white">
+          <div className="p-6 rounded-2xl border border-border bg-raised">
             <h3 className="font-semibold text-lg">Team</h3>
             <p className="text-muted-foreground text-sm mt-1">For small teams building together</p>
             <div className="mt-4 mb-6">
@@ -564,7 +564,7 @@ function CTASection() {
         </p>
         <div className="mt-8">
           <Link href="/signup">
-            <Button size="lg" className="bg-accent hover:bg-orange-600 text-white text-base">
+            <Button size="lg" className="bg-accent hover:bg-accent text-white text-base">
               Get started free
               <ArrowRight className="w-4 h-4" />
             </Button>
@@ -624,7 +624,7 @@ function Footer() {
 
 export function LandingPage() {
   return (
-    <div className="min-h-screen bg-white">
+    <div className="min-h-screen bg-raised">
       <Navbar />
       <Hero />
       <AppPreview />
