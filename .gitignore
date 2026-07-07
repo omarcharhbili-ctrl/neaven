@@ -40,3 +40,5 @@ secrets/
 *.pem
 # External clone (activepieces) — not part of this repo
 automation/
+# External clone (plausible) — design reference only
+reference-only/
