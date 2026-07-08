@@ -1,26 +1,14 @@
-import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { clerkMiddleware } from "@clerk/nextjs/server";
 
-// Next 16 renamed `middleware` to `proxy` — same contract, new filename.
-const isPublicRoute = createRouteMatcher([
-  "/", // landing
-  "/login(.*)",
-  "/signup(.*)",
-  "/api/webhooks(.*)", // GitHub webhooks authenticate via HMAC signature, not Clerk
-  "/api/watcher/checkin", // MCP check-ins authenticate via API key
-  "/api/jobs(.*)", // cron jobs authenticate via CRON_SECRET bearer token
-]);
-
-export default clerkMiddleware(async (auth, request) => {
-  if (!isPublicRoute(request)) {
-    await auth.protect();
-  }
-});
+// Frontend rolled back to the original mock screens (a1a621c) — nothing is
+// auth-gated while we rebuild step by step. clerkMiddleware still runs so
+// the API routes' auth() calls keep working once sign-in is reintroduced;
+// until then, unauthenticated API calls return 401 and pages browse freely.
+export default clerkMiddleware();
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and static assets
     "/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)",
-    // Always run for API routes
     "/(api|trpc)(.*)",
   ],
 };

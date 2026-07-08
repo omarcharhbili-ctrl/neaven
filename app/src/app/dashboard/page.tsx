@@ -1,287 +1,278 @@
-import { and, desc, eq } from "drizzle-orm";
-import { Check, Eye, BarChart3, Workflow, MessageSquare, ArrowUpRight } from "lucide-react";
-import { redirect } from "next/navigation";
-import Link from "next/link";
-import { db } from "@/db";
+"use client";
+
+import { Button } from "@/components/Button";
 import {
-  founders,
-  progressItems,
-  subAgentSummaries,
-  tips,
-  visionBaselines,
-} from "@/db/schema";
-import { getFounder } from "@/lib/founder";
-import { getOrCreateDailyBrief, type BriefItem } from "@/lib/agents/brief";
+  Bot,
+  Eye,
+  ArrowRight,
+  TrendingUp,
+  Clock,
+  CheckCircle2,
+  AlertTriangle,
+  ArrowUpRight,
+  Calendar,
+  Target,
+  Zap,
+  BarChart3,
+  MessageSquare,
+} from "lucide-react";
+import Link from "next/link";
 
-export const dynamic = "force-dynamic";
+function StatCard({ label, value, sub, trend, icon: Icon }: {
+  label: string;
+  value: string;
+  sub: string;
+  trend?: "up" | "down" | "neutral";
+  icon: React.ElementType;
+}) {
+  return (
+    <div className="p-5 rounded-xl border border-border bg-white hover:shadow-sm transition-shadow">
+      <div className="flex items-center justify-between mb-3">
+        <div className="w-9 h-9 rounded-lg bg-surface flex items-center justify-center">
+          <Icon className="w-4 h-4 text-muted-foreground" />
+        </div>
+        {trend === "up" && (
+          <span className="text-xs text-success flex items-center gap-0.5">
+            <TrendingUp className="w-3 h-3" /> +12%
+          </span>
+        )}
+      </div>
+      <p className="text-2xl font-bold">{value}</p>
+      <p className="text-xs text-muted-foreground mt-0.5">{label}</p>
+      <p className="text-xs text-muted-foreground mt-1">{sub}</p>
+    </div>
+  );
+}
 
-/* ---------------------------------------------------------------------------
-   Today — a worklist, not a card wall. Left: the brief as numbered rows and
-   the agent report feed. Right: a thin rail with the Watcher's profile and
-   progress. Hairlines do the separating; nothing floats in a box unless it
-   must.
---------------------------------------------------------------------------- */
-
-const AGENT_ICON = { watcher: Eye, analytics: BarChart3, automation: Workflow } as const;
-
-const KIND_TAG: Record<BriefItem["kind"], { label: string; cls: string }> = {
-  task: { label: "today", cls: "text-accent" },
-  next_step: { label: "next", cls: "text-muted-foreground" },
-  handled: { label: "handled", cls: "text-success" },
-  news: { label: "news", cls: "text-info" },
-};
-
-const TIP_DOT: Record<string, string> = {
-  quality: "bg-danger",
-  drift: "bg-warning",
-  stall: "bg-info",
-};
-
-export default async function DashboardPage() {
-  const founder = await getFounder();
-  if (!founder) redirect("/login");
-
-  // Onboarding is a hard gate — no baseline, no product.
-  if (!founder.onboardingCompleted) {
-    const baseline = await db.query.visionBaselines.findFirst({
-      where: and(
-        eq(visionBaselines.founderId, founder.id),
-        eq(visionBaselines.isCurrent, true),
-      ),
-    });
-    if (!baseline) redirect("/onboarding");
-    // Baseline exists (set via chat) — mark the gate passed.
-    await db
-      .update(founders)
-      .set({ onboardingCompleted: true })
-      .where(eq(founders.id, founder.id));
-  }
-
-  const [brief, founderTips, summaries, progress] = await Promise.all([
-    getOrCreateDailyBrief(founder),
-    db.query.tips.findMany({
-      where: eq(tips.founderId, founder.id),
-      orderBy: [desc(tips.occurrences), desc(tips.updatedAt)],
-      limit: 6,
-    }),
-    db.query.subAgentSummaries.findMany({
-      where: eq(subAgentSummaries.founderId, founder.id),
-      orderBy: desc(subAgentSummaries.createdAt),
-      limit: 10,
-      columns: { payload: false },
-    }),
-    db.query.progressItems.findMany({
-      where: eq(progressItems.founderId, founder.id),
-      orderBy: desc(progressItems.updatedAt),
-      limit: 8,
-    }),
-  ]);
-
-  const briefItems = brief.items as BriefItem[];
-  const firstName = founder.name?.split(" ")[0];
-  const today = new Date();
-  const dateLine = today.toLocaleDateString(undefined, {
-    weekday: "long",
-    month: "long",
-    day: "numeric",
-  });
-
-  const tipTotals = founderTips.reduce<Record<string, number>>((acc, t) => {
-    acc[t.category] = (acc[t.category] ?? 0) + t.occurrences;
-    return acc;
-  }, {});
-  const tipSum = Object.values(tipTotals).reduce((a, b) => a + b, 0);
+function CofounderInsight({ priority, title, description, action, actionHref }: {
+  priority: "high" | "medium" | "low";
+  title: string;
+  description: string;
+  action: string;
+  actionHref: string;
+}) {
+  const colors = {
+    high: "bg-orange-50 border-orange-200",
+    medium: "bg-blue-50 border-blue-200",
+    low: "bg-surface border-border",
+  };
+  const badges = {
+    high: "bg-accent text-white",
+    medium: "bg-blue-500 text-white",
+    low: "bg-muted text-muted-foreground",
+  };
 
   return (
-    <div className="mx-auto flex max-w-[1120px]">
-      {/* Working column */}
-      <div className="min-w-0 flex-1 px-8 py-9">
-        <header className="animate-rise">
-          <p className="font-mono text-[11.5px] uppercase tracking-[0.16em] text-muted-foreground">
-            {dateLine}
+    <div className={`p-4 rounded-xl border ${colors[priority]}`}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start gap-3">
+          <div className="w-7 h-7 rounded-full bg-accent flex items-center justify-center shrink-0 mt-0.5">
+            <Bot className="w-3.5 h-3.5 text-white" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className={`text-[10px] font-medium uppercase tracking-wider px-1.5 py-0.5 rounded ${badges[priority]}`}>
+                {priority}
+              </span>
+            </div>
+            <p className="text-sm font-medium">{title}</p>
+            <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{description}</p>
+          </div>
+        </div>
+        <Link href={actionHref}>
+          <Button variant="ghost" size="sm" className="shrink-0 text-xs">
+            {action}
+            <ArrowRight className="w-3 h-3" />
+          </Button>
+        </Link>
+      </div>
+    </div>
+  );
+}
+
+function ActivityItem({ time, text, type }: {
+  time: string;
+  text: string;
+  type: "watcher" | "cofounder" | "system";
+}) {
+  const icons = {
+    watcher: <Eye className="w-3.5 h-3.5 text-purple-500" />,
+    cofounder: <Bot className="w-3.5 h-3.5 text-accent" />,
+    system: <Zap className="w-3.5 h-3.5 text-muted-foreground" />,
+  };
+
+  return (
+    <div className="flex items-start gap-3 py-3 border-b border-border last:border-0">
+      <div className="w-7 h-7 rounded-full bg-surface flex items-center justify-center shrink-0 mt-0.5">
+        {icons[type]}
+      </div>
+      <div className="flex-1">
+        <p className="text-sm">{text}</p>
+        <p className="text-xs text-muted-foreground mt-0.5">{time}</p>
+      </div>
+    </div>
+  );
+}
+
+function TaskItem({ title, status, priority }: {
+  title: string;
+  status: "todo" | "in-progress" | "done";
+  priority: "high" | "medium" | "low";
+}) {
+  const statusColors = {
+    todo: "bg-muted text-muted-foreground",
+    "in-progress": "bg-blue-100 text-blue-700",
+    done: "bg-green-100 text-green-700",
+  };
+  const statusLabels = {
+    todo: "To do",
+    "in-progress": "In progress",
+    done: "Done",
+  };
+  const priorityDots = {
+    high: "bg-error",
+    medium: "bg-warning",
+    low: "bg-muted-foreground",
+  };
+
+  return (
+    <div className="flex items-center gap-3 py-2.5 border-b border-border last:border-0">
+      <div className={`w-1.5 h-1.5 rounded-full ${priorityDots[priority]}`} />
+      <p className="text-sm flex-1">{title}</p>
+      <span className={`text-[10px] font-medium px-2 py-0.5 rounded-full ${statusColors[status]}`}>
+        {statusLabels[status]}
+      </span>
+    </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <div className="p-6 max-w-6xl mx-auto">
+      {/* Header */}
+      <div className="flex items-start justify-between mb-8">
+        <div>
+          <h1 className="text-2xl font-bold">Good morning, Omar</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Here&apos;s what to focus on today.
           </p>
-          <h1 className="font-display mt-2 text-[28px] font-semibold tracking-[-0.02em]">
-            {firstName ? `${firstName}, here's today.` : "Here's today."}
-          </h1>
-        </header>
-
-        {/* The brief — numbered worklist */}
-        <section className="mt-8">
-          <div className="flex items-baseline justify-between border-b border-border-strong pb-2.5">
-            <h2 className="font-display text-[15px] font-semibold tracking-[-0.01em]">
-              The brief
-            </h2>
-            <Link
-              href="/cofounder"
-              className="inline-flex items-center gap-1 text-[12px] font-medium text-accent transition-colors hover:text-accent-hover"
-            >
-              <MessageSquare className="h-3.5 w-3.5" strokeWidth={2} />
-              Talk it through
-            </Link>
+        </div>
+        <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-50 text-green-700 text-xs font-medium border border-green-200">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse-dot" />
+            On track
           </div>
-          <ol>
-            {briefItems.map((item, i) => {
-              const tag = KIND_TAG[item.kind] ?? KIND_TAG.task;
-              const done = item.done || item.kind === "handled";
-              return (
-                <li
-                  key={i}
-                  className="flex items-start gap-4 border-b border-border py-4"
-                >
-                  <span className="w-6 pt-px text-right font-mono text-[12px] text-faint-foreground">
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <div className="min-w-0 flex-1">
-                    <div className="flex items-center gap-2.5">
-                      <p
-                        className={`text-[14px] font-medium ${
-                          done ? "text-muted-foreground line-through decoration-border-strong" : ""
-                        }`}
-                      >
-                        {item.title}
-                      </p>
-                      {done && <Check className="h-3.5 w-3.5 text-success" strokeWidth={2.5} />}
-                    </div>
-                    <p className="mt-1 text-[12.5px] leading-relaxed text-muted-foreground">
-                      {item.detail}
-                    </p>
-                  </div>
-                  <span className={`pt-px font-mono text-[10.5px] uppercase tracking-[0.1em] ${tag.cls}`}>
-                    {tag.label}
-                  </span>
-                </li>
-              );
-            })}
-          </ol>
-        </section>
-
-        {/* Agent reports feed */}
-        <section className="mt-10">
-          <div className="border-b border-border-strong pb-2.5">
-            <h2 className="font-display text-[15px] font-semibold tracking-[-0.01em]">
-              From the agents
-            </h2>
+          <div className="text-xs text-muted-foreground flex items-center gap-1">
+            <Calendar className="w-3.5 h-3.5" />
+            June 24, 2026
           </div>
-          {summaries.length ? (
-            <ul>
-              {summaries.map((s) => {
-                const Icon = AGENT_ICON[s.agent];
-                return (
-                  <li key={s.id} className="flex items-start gap-4 border-b border-border py-3.5">
-                    <Icon className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" strokeWidth={1.8} />
-                    <div className="min-w-0 flex-1">
-                      <p className="text-[13px] leading-relaxed">{s.summary}</p>
-                      <p className="mt-1 font-mono text-[10.5px] uppercase tracking-[0.08em] text-faint-foreground">
-                        {s.agent} ·{" "}
-                        <span
-                          className={
-                            s.significance === "anomaly"
-                              ? "text-warning"
-                              : s.significance === "milestone"
-                                ? "text-accent"
-                                : ""
-                          }
-                        >
-                          {s.significance}
-                        </span>{" "}
-                        · {new Date(s.createdAt).toLocaleDateString(undefined, { month: "short", day: "numeric" })}
-                      </p>
-                    </div>
-                  </li>
-                );
-              })}
-            </ul>
-          ) : (
-            <p className="py-8 font-mono text-[12px] leading-relaxed text-faint-foreground">
-              — quiet. Agents report here on anomalies and milestones, not on a
-              schedule.
-            </p>
-          )}
-        </section>
+        </div>
       </div>
 
-      {/* Rail */}
-      <aside className="hidden w-[300px] shrink-0 border-l border-border px-6 py-9 lg:block">
-        {/* Watcher profile */}
-        <div>
-          <div className="flex items-baseline justify-between">
-            <h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-              Patterns
-            </h3>
-            <Link href="/watcher" className="text-[11.5px] text-accent hover:text-accent-hover">
-              Watcher <ArrowUpRight className="inline h-3 w-3" strokeWidth={2} />
-            </Link>
+      {/* Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <StatCard icon={Target} label="Sprint progress" value="68%" sub="Day 5 of 10" trend="up" />
+        <StatCard icon={CheckCircle2} label="Tasks completed" value="12/18" sub="4 in review" />
+        <StatCard icon={Clock} label="Days to deadline" value="36" sub="July 30, 2026" />
+        <StatCard icon={BarChart3} label="Focus score" value="8.2" sub="Above average" trend="up" />
+      </div>
+
+      {/* Co-founder insights */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <Bot className="w-5 h-5 text-accent" />
+            Co-founder insights
+          </h2>
+          <Link href="/cofounder">
+            <Button variant="ghost" size="sm">
+              Open chat
+              <ArrowRight className="w-3 h-3" />
+            </Button>
+          </Link>
+        </div>
+        <div className="space-y-3">
+          <CofounderInsight
+            priority="high"
+            title="Finish auth flow before switching tasks"
+            description="Your brief says auth is the launch blocker. I noticed you started on the settings page — that's not on the critical path. Suggest: finish the login/signup flow first."
+            action="View brief"
+            actionHref="/brief"
+          />
+          <CofounderInsight
+            priority="medium"
+            title="3 prompts drifted from the brief yesterday"
+            description="During your last coding session, 3 prompts were unrelated to any roadmap item. The Watcher flagged them — want to review?"
+            action="Review"
+            actionHref="/watcher"
+          />
+          <CofounderInsight
+            priority="low"
+            title="Weekly progress update ready"
+            description="You completed 8 tasks this week, refactored the API layer, and are on pace for the July 30 deadline. Full report available."
+            action="View report"
+            actionHref="/cofounder"
+          />
+        </div>
+      </div>
+
+      {/* Bottom grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Tasks */}
+        <div className="rounded-xl border border-border bg-white p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Today&apos;s tasks</h3>
+            <span className="text-xs text-muted-foreground">From your brief</span>
           </div>
-          {founderTips.length ? (
-            <>
-              {tipSum > 0 && (
-                <div className="mt-3 flex h-1 overflow-hidden rounded-full bg-higher">
-                  {(["quality", "drift", "stall"] as const).map((cat) =>
-                    tipTotals[cat] ? (
-                      <div
-                        key={cat}
-                        style={{ width: `${(tipTotals[cat] / tipSum) * 100}%` }}
-                        className={TIP_DOT[cat]}
-                      />
-                    ) : null,
-                  )}
-                </div>
-              )}
-              <ul className="mt-3 space-y-3">
-                {founderTips.map((tip) => (
-                  <li key={tip.id} className="flex items-start gap-2.5">
-                    <span className={`mt-[7px] h-[6px] w-[6px] shrink-0 rounded-full ${TIP_DOT[tip.category] ?? "bg-border-strong"}`} />
-                    <p className="text-[12px] leading-relaxed text-secondary-foreground">
-                      {tip.pattern}
-                      {tip.occurrences > 1 && (
-                        <span className="ml-1.5 font-mono text-[10px] text-faint-foreground">
-                          ×{tip.occurrences}
-                        </span>
-                      )}
-                    </p>
-                  </li>
-                ))}
-              </ul>
-            </>
-          ) : (
-            <p className="mt-3 font-mono text-[11.5px] leading-relaxed text-faint-foreground">
-              No recurring patterns yet — built from your sessions and pull
-              requests.
-            </p>
-          )}
+          <div>
+            <TaskItem title="Complete login page UI" status="done" priority="high" />
+            <TaskItem title="Implement auth API routes" status="in-progress" priority="high" />
+            <TaskItem title="Add email verification flow" status="todo" priority="high" />
+            <TaskItem title="Write auth unit tests" status="todo" priority="medium" />
+            <TaskItem title="Update API documentation" status="todo" priority="low" />
+          </div>
         </div>
 
-        {/* Progress */}
-        <div className="mt-9 border-t border-border pt-7">
-          <h3 className="font-mono text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
-            Progress
-          </h3>
-          {progress.length ? (
-            <ul className="mt-3 space-y-2.5">
-              {progress.map((p) => (
-                <li key={p.id} className="flex items-center gap-2.5">
-                  <span
-                    className={`h-[6px] w-[6px] shrink-0 rounded-full ${
-                      p.status === "done"
-                        ? "bg-success"
-                        : p.status === "in_flight"
-                          ? "bg-accent"
-                          : "bg-border-strong"
-                    }`}
-                  />
-                  <p className="min-w-0 flex-1 truncate text-[12px] text-secondary-foreground">
-                    {p.item}
-                  </p>
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p className="mt-3 font-mono text-[11.5px] leading-relaxed text-faint-foreground">
-              Fills in as you and Neaven track what&apos;s done, in flight, next.
-            </p>
-          )}
+        {/* Activity feed */}
+        <div className="rounded-xl border border-border bg-white p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold">Recent activity</h3>
+            <span className="text-xs text-muted-foreground">Last 24h</span>
+          </div>
+          <div>
+            <ActivityItem
+              type="cofounder"
+              text="Morning briefing sent: 3 priorities for today"
+              time="8:00 AM"
+            />
+            <ActivityItem
+              type="watcher"
+              text="Coding session detected — monitoring started"
+              time="9:15 AM"
+            />
+            <ActivityItem
+              type="watcher"
+              text="Prompt refined: added context from brief before send"
+              time="9:23 AM"
+            />
+            <ActivityItem
+              type="watcher"
+              text="Drift alert: prompt unrelated to roadmap"
+              time="10:45 AM"
+            />
+            <ActivityItem
+              type="cofounder"
+              text="Mid-day check: 'You're 2 tasks ahead of yesterday's pace'"
+              time="12:30 PM"
+            />
+            <ActivityItem
+              type="system"
+              text="Brief updated: deadline confirmed July 30"
+              time="Yesterday"
+            />
+          </div>
         </div>
-      </aside>
+      </div>
     </div>
   );
 }

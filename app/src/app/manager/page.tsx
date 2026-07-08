@@ -12,7 +12,11 @@ import {
   Target,
   TrendingUp,
   Paperclip,
+  Smile,
   MoreHorizontal,
+  ChevronDown,
+  ArrowRight,
+  Star,
   ThumbsUp,
   ThumbsDown,
 } from "lucide-react";
@@ -23,6 +27,7 @@ type Message = {
   type: "bot" | "user" | "system";
   content: string;
   time: string;
+  reactions?: string[];
   actions?: { label: string; variant: "primary" | "secondary" }[];
   isDigest?: boolean;
   digestItems?: { icon: string; text: string; status: "done" | "todo" | "warning" }[];
@@ -38,21 +43,20 @@ const initialMessages: Message[] = [
   {
     id: "2",
     type: "bot",
-    content: "Morning, Omar. Here's your daily rundown.",
+    content: "Good morning, Omar. Here's your daily briefing.",
     time: "8:00 AM",
     isDigest: true,
     digestItems: [
       { icon: "🎯", text: "3 priority tasks for today (from your brief)", status: "todo" },
-      { icon: "📊", text: "Sprint progress: 68% — on pace for July 30", status: "done" },
-      { icon: "⚠️", text: "Auth flow is the critical path — stay focused until it's done", status: "warning" },
+      { icon: "📊", text: "Sprint progress: 68% — you're on pace for July 30", status: "done" },
+      { icon: "⚠️", text: "Auth flow is the critical path — don't context-switch until it's done", status: "warning" },
       { icon: "✅", text: "Yesterday: 4 tasks completed, 2h 15m coding time", status: "done" },
-      { icon: "💰", text: "MRR: $0 → need beta users before tracking revenue", status: "todo" },
     ],
   },
   {
     id: "3",
     type: "bot",
-    content: "Top priority: finish the auth API routes. You left 2 edge cases yesterday — email verification timeout and rate limiting on login attempts. Want me to scope those into prompts for your next coding session?",
+    content: "Your top priority today: finish the auth API routes. You started yesterday but left 2 edge cases unhandled — email verification timeout and rate limiting on login attempts. Want me to scope those into prompts for your next coding session?",
     time: "8:01 AM",
     actions: [
       { label: "Yes, scope the prompts", variant: "primary" },
@@ -68,7 +72,7 @@ const initialMessages: Message[] = [
   {
     id: "5",
     type: "bot",
-    content: "Stay on auth. Here's my thinking:\n\n• Auth is the launch blocker — nothing else works without it\n• Invoice UI has zero dependencies on auth being incomplete\n• Your brief puts auth at P0, invoice UI at P1\n• 36 days to deadline — auth today, invoice UI tomorrow is the right sequence\n\nI've scoped 2 prompts for your auth session. They'll be ready in The Watcher when you start coding.",
+    content: "Stay on auth. Here's why:\n\n• Auth is the launch blocker — nothing else works without it\n• Invoice UI has zero dependencies on auth being incomplete\n• Your brief puts auth at P0, invoice UI at P1\n• You have 36 days to deadline — auth today, invoice UI tomorrow is the right sequence\n\nI've scoped 2 prompts for your auth session. They'll be ready in The Watcher when you start coding.",
     time: "8:16 AM",
   },
   {
@@ -80,13 +84,13 @@ const initialMessages: Message[] = [
   {
     id: "7",
     type: "bot",
-    content: "Session started — you're on `feature/auth-flow`. Good, that's aligned with today's priority. I'll keep an eye on things and nudge you if anything drifts.",
+    content: "Coding session started. I can see you're on the `feature/auth-flow` branch — good, that's aligned with today's priority. I'll keep an eye on your prompts and nudge you if anything drifts.",
     time: "9:16 AM",
   },
   {
     id: "8",
     type: "bot",
-    content: "Heads up: your last prompt was about adding a settings page. That's not on the critical path right now. Should I flag this as drift, or are you intentionally switching focus?",
+    content: "Heads up: I noticed your last prompt was about adding a settings page. That's not on the critical path. Your brief says auth is the blocker — should I flag this as drift or are you intentionally context-switching?",
     time: "10:45 AM",
     actions: [
       { label: "Flag as drift — refocus me", variant: "primary" },
@@ -102,7 +106,7 @@ const initialMessages: Message[] = [
   {
     id: "10",
     type: "bot",
-    content: "Done. Flagged in The Watcher, auth prompts re-queued.\n\n→ Next: Email verification timeout handler\n→ After: Rate limiting on login attempts\n\n2 tasks away from completing auth. Let's close this out today.",
+    content: "Done. I've flagged it in The Watcher and re-queued your auth prompts. Here's where you left off:\n\n→ Next up: Email verification timeout handler\n→ After that: Rate limiting on login attempts\n\nYou're 2 tasks away from completing the auth flow. Let's close this out today.",
     time: "10:47 AM",
   },
 ];
@@ -172,6 +176,7 @@ function ChatBubble({ message }: { message: Message }) {
           )}
         </div>
 
+        {/* Time & reactions */}
         <div className={`flex items-center gap-2 mt-1 ${isBot ? "" : "justify-end"}`}>
           <span className="text-[10px] text-muted-foreground">{message.time}</span>
           {isBot && (
@@ -186,7 +191,7 @@ function ChatBubble({ message }: { message: Message }) {
   );
 }
 
-export default function CofounderPage() {
+export default function ManagerPage() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -210,7 +215,7 @@ export default function CofounderPage() {
       const reply: Message = {
         id: (Date.now() + 1).toString(),
         type: "bot",
-        content: "Let me check that against your brief and get back to you with a recommendation.",
+        content: "Got it. Let me check that against your brief and get back to you with a recommendation.",
         time: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
       };
       setMessages((prev) => [...prev, reply]);
@@ -219,6 +224,7 @@ export default function CofounderPage() {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Header */}
       <div className="px-6 py-4 border-b border-border bg-white flex items-center justify-between shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-9 h-9 rounded-full bg-accent flex items-center justify-center">
@@ -226,10 +232,10 @@ export default function CofounderPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-semibold">Your AI Co-founder</h1>
+              <h1 className="font-semibold">The Manager</h1>
               <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
             </div>
-            <p className="text-xs text-muted-foreground">Thinks with you, not for you — always grounded in the brief</p>
+            <p className="text-xs text-muted-foreground">Your AI project manager — proactive, not reactive</p>
           </div>
         </div>
         <div className="flex items-center gap-2">
@@ -243,6 +249,7 @@ export default function CofounderPage() {
         </div>
       </div>
 
+      {/* Messages */}
       <div className="flex-1 overflow-y-auto px-6 py-6 space-y-4">
         {messages.map((msg) => (
           <ChatBubble key={msg.id} message={msg} />
@@ -250,6 +257,7 @@ export default function CofounderPage() {
         <div ref={bottomRef} />
       </div>
 
+      {/* Input */}
       <div className="px-6 py-4 border-t border-border bg-white shrink-0">
         <div className="flex items-end gap-3">
           <div className="flex-1 relative">
@@ -262,7 +270,7 @@ export default function CofounderPage() {
                   handleSend();
                 }
               }}
-              placeholder="Talk to your co-founder..."
+              placeholder="Ask your manager anything..."
               rows={1}
               className="w-full px-4 py-3 pr-20 rounded-xl border border-border text-sm focus:outline-none focus:ring-2 focus:ring-accent/20 focus:border-accent resize-none"
             />
@@ -285,7 +293,7 @@ export default function CofounderPage() {
               <TrendingUp className="w-3 h-3" /> Get progress report
             </button>
           </div>
-          <p className="text-[10px] text-muted-foreground">Enter to send · Shift+Enter for new line</p>
+          <p className="text-[10px] text-muted-foreground">Enter to send &middot; Shift+Enter for new line</p>
         </div>
       </div>
     </div>
