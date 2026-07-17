@@ -28,6 +28,13 @@ services:
       # server-side .env — see the deploy notes.
       DATABASE_URL: "postgresql://neaven:ofQ2OZIOTzH0Nh7pSwMTEGlyFixos4Nz0M6TmEHF@postgres:5432/neaven_db"
       REDIS_URL: "redis://redis:6379"
+      # --- Automation engine (Neaven-branded Activepieces, ~/neaven-automation) ---
+      # Public origin the founder's browser loads in the Automations iframe.
+      ACTIVEPIECES_URL: "https://automations.neaven.net"
+      # Server-to-server origin over neaven_shared for the silent-auth bridge.
+      # Caddy blocks the engine's sign-up/sign-in endpoints publicly; only this
+      # in-network path can reach them.
+      ACTIVEPIECES_INTERNAL_URL: "http://neaven-automation-engine"
     volumes:
       # GitHub App private key — mounted from the server, same pattern PR-Agent
       # uses for its .secrets.toml (host file → container path, read-only).

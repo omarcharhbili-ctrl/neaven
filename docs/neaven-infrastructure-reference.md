@@ -11,8 +11,8 @@ Related specs (architecture/behavior, not infra): `neaven-main-agent-spec.md`, `
 - **Host:** Hetzner VPS (CX23), Ubuntu 24.04 LTS, hostname `neaven-prod`
 - **Domain:** neaven.net — DNS/proxy via Cloudflare, SSL handled automatically by Caddy
 - **Core stack** (`~/neaven/docker-compose.yml`): Caddy (reverse proxy), Postgres 16, Redis 7 — all in the default Docker network
-- **Caddyfile location:** `~/neaven/caddy/Caddyfile`
-- Current Caddyfile only serves a placeholder response ("Neaven is coming soon") on the root, plus one active route (see PR-Agent below). The real app isn't deployed here yet.
+- **Caddyfile location:** `~/neaven/caddy/Caddyfile` (a `.bak` sits next to it from the last edit)
+- Routes: `neaven.net`/`www` → `neaven-web:3000` (plus the PR-Agent webhook route below), and `automations.neaven.net` → `neaven-automation-engine:80` with the engine's `sign-up`/`sign-in` API answering 404 publicly (only the Neaven app reaches those, server-to-server).
 
 ---
 
@@ -36,15 +36,18 @@ Related specs (architecture/behavior, not infra): `neaven-main-agent-spec.md`, `
 
 ---
 
-## Activepieces (Automation agent's engine)
+## Automation engine (Neaven-branded Activepieces) — DEPLOYED 2026-07-17
 
-- **Location on server:** `~/activepieces/`
-- **Status:** currently the stock, unmodified pre-built image (`ghcr.io/activepieces/activepieces:latest`), running as its own fully isolated stack — own Postgres, own Redis, own Docker network. **Not currently reachable via Caddy** — bound only to `127.0.0.1` on the server, accessed for testing via SSH tunnel.
-- **Telemetry:** explicitly disabled (`AP_TELEMETRY_ENABLED=false`).
-- **Decision made: Option 3 (custom auth bridge)** — clone Activepieces' MIT-licensed source, build a custom login bridge (founder authenticates via Clerk, gets silently authenticated into their own Activepieces project — no separate login screen), restyle to match Neaven. Zero recurring cost; real dev work, to be done via Claude Code.
-  - Ruled out: paying for the official Embed SDK (~$800+/month, not viable pre-revenue) and giving founders a separate standalone Activepieces account (breaks the single-app experience).
-  - **Licensing note:** the Activepieces repo (`activepieces/activepieces`) is mixed-license — the core builder/engine is MIT (freely modifiable), but their official embedding SDK code is under a separate Commercial license. Building a custom auth bridge from scratch (rather than reusing their embedding module) avoids that licensing question entirely.
-- **The currently-deployed server instance stays running as-is until a custom version is finalized and ready to replace it** — no reason to tear it down early.
+- **Location on server:** `~/neaven-automation/` (compose + `bridge/embed-bridge.html` + LF entrypoint; tracked in the repo as `automation-engine/docker-compose.prod.yml`)
+- **Image:** `neaven-automation:dev` — built locally from the MIT core with Neaven branding baked in at source (`automation-engine/neaven-branding.patch`), transferred via `docker save | ssh | docker load` (the CX23 is too small to build it from source).
+- **Stack:** own Postgres 16 + Redis 7 on its own network; the engine container also joins `neaven_shared` so Caddy routes `automations.neaven.net` to it. Loopback `127.0.0.1:8081` kept for SSH-tunnel debugging.
+- **Secrets:** `~/neaven-automation/.env` (chmod 600) — `AP_ENCRYPTION_KEY`, `AP_JWT_SECRET`, `AP_POSTGRES_PASSWORD`, generated at setup, never in git.
+- **Platform:** created via the onboarding API and owned by a seeded `admin@neaven.net` account; its credentials live in `~/neaven-automation/.admin-credentials` (chmod 600). Founders are provisioned as platform MEMBERs with their own project by the silent-auth bridge (`app/src/app/api/automation/bridge/route.ts`): Clerk session → per-founder engine account (random server-side password in the `connections` table) → silent sign-in → token handed to the iframe via URL fragment through the same-origin `embed-bridge.html`.
+- **Security posture:** `AP_ALLOW_OPEN_SIGN_UP=true` is required for provisioning, but Caddy answers 404 for `/api/v1/authentication/sign-up|sign-in` publicly — the bridge calls them over `neaven_shared` (`ACTIVEPIECES_INTERNAL_URL=http://neaven-automation-engine`), so the world cannot self-register. `AP_ALLOWED_EMBED_ORIGINS=https://neaven.net,https://www.neaven.net` sets the CSP `frame-ancestors` so only Neaven may iframe the builder.
+- **Telemetry:** disabled.
+- **DNS:** `automations.neaven.net` must exist in Cloudflare (A → 167.233.167.41, same proxy setting as the root). Caddy auto-issues the cert once the record resolves; it retries on its own.
+- The old stock stack (`~/activepieces/`, `ghcr.io/activepieces/activepieces:latest`) was torn down the same day — its volumes (`activepieces_ap_postgres_data`, throwaway test data) were left in place and can be pruned.
+- **Licensing note:** only the MIT core is used; the auth bridge is custom-built and does not touch the commercially-licensed embed SDK.
 
 ---
 

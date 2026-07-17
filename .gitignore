@@ -38,8 +38,10 @@ yarn-error.log*
 secrets/
 **/secrets/
 *.pem
-# External clone (activepieces) — not part of this repo
-automation/
+# External clone (activepieces) — not part of this repo. Anchored to the repo
+# root: an unanchored `automation/` also swallowed app/src/app/api/automation/,
+# silently keeping the bridge API route out of git.
+/automation/
 # External clone (plausible) — design reference only
 reference-only/
 screenshots-rebuild/

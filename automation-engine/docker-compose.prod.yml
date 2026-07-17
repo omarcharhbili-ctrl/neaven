@@ -1,0 +1,79 @@
+# Neaven automation engine — production stack (~/neaven-automation on the VPS).
+#
+# Same shape as the local dev stack (docker-compose.yml) with three
+# differences: it joins `neaven_shared` so Caddy can route
+# automations.neaven.net to it by container name, its secrets come from a
+# server-side .env (never in git), and the embed origins are the production
+# domains. The image is the Neaven-branded build transferred from the dev
+# machine (`docker save neaven-automation:dev | ssh … docker load`) — the VPS
+# is too small to build Activepieces from source.
+#
+# Replaces the stock ~/activepieces stack (see
+# docs/neaven-infrastructure-reference.md).
+services:
+  activepieces:
+    image: neaven-automation:dev
+    container_name: neaven-automation-engine
+    restart: unless-stopped
+    ports:
+      # Loopback only — debugging via SSH tunnel. Public traffic comes
+      # through Caddy over neaven_shared, never this port.
+      - "127.0.0.1:8081:80"
+    environment:
+      AP_FRONTEND_URL: https://automations.neaven.net
+      # Secrets live in ./.env on the server (chmod 600), generated at setup.
+      AP_ENCRYPTION_KEY: ${AP_ENCRYPTION_KEY}
+      AP_JWT_SECRET: ${AP_JWT_SECRET}
+      AP_POSTGRES_DATABASE: activepieces
+      AP_POSTGRES_HOST: postgres
+      AP_POSTGRES_PORT: "5432"
+      AP_POSTGRES_USERNAME: activepieces
+      AP_POSTGRES_PASSWORD: ${AP_POSTGRES_PASSWORD}
+      AP_REDIS_HOST: redis
+      AP_REDIS_PORT: "6379"
+      AP_TELEMETRY_ENABLED: "false"
+      # Lets the Neaven app iframe the builder (CSP frame-ancestors).
+      AP_ALLOWED_EMBED_ORIGINS: https://neaven.net,https://www.neaven.net
+      # The silent-auth bridge provisions one engine user per founder via the
+      # sign-up API. Caddy returns 404 for the engine's sign-up/sign-in
+      # endpoints publicly — only the Neaven app reaches them, server-to-server
+      # over neaven_shared — so open sign-up is not actually open to the world.
+      AP_ALLOW_OPEN_SIGN_UP: "true"
+    volumes:
+      # Same-origin silent-auth handoff page (see bridge/embed-bridge.html).
+      - ./bridge/embed-bridge.html:/usr/src/app/dist/packages/web/embed-bridge.html:ro
+      # LF copy of the entrypoint — the Windows-built image baked in CRLF.
+      - ./docker-entrypoint.sh:/usr/src/app/docker-entrypoint.sh:ro
+    networks:
+      - default
+      - neaven_shared
+    depends_on:
+      - postgres
+      - redis
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: neaven-automation-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: activepieces
+      POSTGRES_USER: activepieces
+      POSTGRES_PASSWORD: ${AP_POSTGRES_PASSWORD}
+    volumes:
+      - ap_postgres_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: neaven-automation-redis
+    restart: unless-stopped
+    volumes:
+      - ap_redis_data:/data
+
+volumes:
+  ap_postgres_data:
+  ap_redis_data:
+
+networks:
+  # Created/owned by the core stack; we only attach.
+  neaven_shared:
+    external: true
