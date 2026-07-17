@@ -22,7 +22,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-function BriefSection({ icon: Icon, title, children, editable = true }: {
+function OverviewSection({ icon: Icon, title, children, editable = true }: {
   icon: React.ElementType;
   title: string;
   children: React.ReactNode;
@@ -95,7 +95,7 @@ function OKRItem({ objective, keyResults, progress }: {
   );
 }
 
-export default function BriefPage() {
+export default function OverviewPage() {
   return (
     <div className="p-6 max-w-4xl mx-auto">
       {/* Header */}
@@ -103,7 +103,7 @@ export default function BriefPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Brain className="w-5 h-5 text-accent" />
-            <h1 className="text-2xl font-bold">The Brief</h1>
+            <h1 className="text-2xl font-bold">Overview</h1>
           </div>
           <p className="text-sm text-muted-foreground">
             Your project&apos;s source of truth. Everything Neaven does checks against this.
@@ -116,39 +116,39 @@ export default function BriefPage() {
           </Button>
           <Button size="sm">
             <Edit3 className="w-3.5 h-3.5" />
-            Edit brief
+            Edit overview
           </Button>
         </div>
       </div>
 
-      {/* Brief health */}
+      {/* Overview health */}
       <div className="p-4 rounded-xl bg-green-50 border border-green-200 mb-6 flex items-center gap-3">
         <CheckCircle2 className="w-5 h-5 text-success shrink-0" />
         <div>
-          <p className="text-sm font-medium text-green-900">Brief is healthy</p>
+          <p className="text-sm font-medium text-green-900">Overview is healthy</p>
           <p className="text-xs text-green-700">Last updated 2 days ago. All sections filled. No conflicts detected.</p>
         </div>
       </div>
 
-      {/* Brief sections */}
+      {/* Overview sections */}
       <div className="space-y-4 mb-8">
-        <BriefSection icon={Rocket} title="What you're building">
+        <OverviewSection icon={Rocket} title="What you're building">
           <p className="text-sm text-muted-foreground leading-relaxed">
             A SaaS platform that helps freelancers manage invoicing and contracts automatically.
             The core value prop is removing the manual work of creating, sending, and tracking invoices
             while keeping everything legally compliant with auto-generated contract templates.
           </p>
-        </BriefSection>
+        </OverviewSection>
 
-        <BriefSection icon={Users} title="Who it's for">
+        <OverviewSection icon={Users} title="Who it's for">
           <p className="text-sm text-muted-foreground leading-relaxed">
             Freelance designers and developers who currently use spreadsheets or basic tools for invoicing.
             Primary persona: solo freelancer making $50-200k/year, juggling 3-8 clients, spending 5+ hours/month
             on admin work they hate.
           </p>
-        </BriefSection>
+        </OverviewSection>
 
-        <BriefSection icon={Target} title="Key goals">
+        <OverviewSection icon={Target} title="Key goals">
           <div className="space-y-2">
             {[
               { goal: "Launch MVP by July 30, 2026", status: "on-track" },
@@ -166,9 +166,9 @@ export default function BriefPage() {
               </div>
             ))}
           </div>
-        </BriefSection>
+        </OverviewSection>
 
-        <BriefSection icon={Calendar} title="Timeline & deadlines">
+        <OverviewSection icon={Calendar} title="Timeline & deadlines">
           <div className="space-y-3">
             <div className="flex items-center justify-between p-3 rounded-lg bg-surface">
               <div className="flex items-center gap-3">
@@ -197,9 +197,9 @@ export default function BriefPage() {
               </div>
             </div>
           </div>
-        </BriefSection>
+        </OverviewSection>
 
-        <BriefSection icon={Wrench} title="Tools & stack">
+        <OverviewSection icon={Wrench} title="Tools & stack">
           <div className="flex flex-wrap gap-2">
             {[
               "Claude Code",
@@ -216,7 +216,7 @@ export default function BriefPage() {
               </span>
             ))}
           </div>
-        </BriefSection>
+        </OverviewSection>
       </div>
 
       {/* OKRs */}

@@ -93,10 +93,10 @@ function CofounderInsight({ priority, title, description, action, actionHref }: 
 function ActivityItem({ time, text, type }: {
   time: string;
   text: string;
-  type: "watcher" | "cofounder" | "system";
+  type: "qode" | "cofounder" | "system";
 }) {
   const icons = {
-    watcher: <Eye className="w-3.5 h-3.5 text-purple-500" />,
+    qode: <Eye className="w-3.5 h-3.5 text-purple-500" />,
     cofounder: <Bot className="w-3.5 h-3.5 text-accent" />,
     system: <Zap className="w-3.5 h-3.5 text-muted-foreground" />,
   };
@@ -184,7 +184,7 @@ export default function DashboardPage() {
             <Bot className="w-5 h-5 text-accent" />
             Co-founder insights
           </h2>
-          <Link href="/cofounder">
+          <Link href="/chat">
             <Button variant="ghost" size="sm">
               Open chat
               <ArrowRight className="w-3 h-3" />
@@ -195,23 +195,23 @@ export default function DashboardPage() {
           <CofounderInsight
             priority="high"
             title="Finish auth flow before switching tasks"
-            description="Your brief says auth is the launch blocker. I noticed you started on the settings page — that's not on the critical path. Suggest: finish the login/signup flow first."
-            action="View brief"
-            actionHref="/brief"
+            description="Your overview says auth is the launch blocker. I noticed you started on the settings page — that's not on the critical path. Suggest: finish the login/signup flow first."
+            action="View overview"
+            actionHref="/overview"
           />
           <CofounderInsight
             priority="medium"
-            title="3 prompts drifted from the brief yesterday"
-            description="During your last coding session, 3 prompts were unrelated to any roadmap item. The Watcher flagged them — want to review?"
+            title="3 prompts drifted from the overview yesterday"
+            description="During your last coding session, 3 prompts were unrelated to any roadmap item. Qode flagged them — want to review?"
             action="Review"
-            actionHref="/watcher"
+            actionHref="/qode"
           />
           <CofounderInsight
             priority="low"
             title="Weekly progress update ready"
             description="You completed 8 tasks this week, refactored the API layer, and are on pace for the July 30 deadline. Full report available."
             action="View report"
-            actionHref="/cofounder"
+            actionHref="/chat"
           />
         </div>
       </div>
@@ -222,7 +222,7 @@ export default function DashboardPage() {
         <div className="rounded-xl border border-border bg-white p-5">
           <div className="flex items-center justify-between mb-4">
             <h3 className="font-semibold">Today&apos;s tasks</h3>
-            <span className="text-xs text-muted-foreground">From your brief</span>
+            <span className="text-xs text-muted-foreground">From your overview</span>
           </div>
           <div>
             <TaskItem title="Complete login page UI" status="done" priority="high" />
@@ -246,17 +246,17 @@ export default function DashboardPage() {
               time="8:00 AM"
             />
             <ActivityItem
-              type="watcher"
+              type="qode"
               text="Coding session detected — monitoring started"
               time="9:15 AM"
             />
             <ActivityItem
-              type="watcher"
-              text="Prompt refined: added context from brief before send"
+              type="qode"
+              text="Prompt refined: added context from overview before send"
               time="9:23 AM"
             />
             <ActivityItem
-              type="watcher"
+              type="qode"
               text="Drift alert: prompt unrelated to roadmap"
               time="10:45 AM"
             />
@@ -267,7 +267,7 @@ export default function DashboardPage() {
             />
             <ActivityItem
               type="system"
-              text="Brief updated: deadline confirmed July 30"
+              text="Overview updated: deadline confirmed July 30"
               time="Yesterday"
             />
           </div>

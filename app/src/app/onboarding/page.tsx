@@ -118,7 +118,7 @@ export default function OnboardingPage() {
               </Button>
             </div>
             <p className="text-xs text-muted-foreground mt-4">
-              You can fill in the details later in The Brief
+              You can fill in the details later in Overview
             </p>
           </div>
         )}
@@ -234,8 +234,8 @@ export default function OnboardingPage() {
               <div className="space-y-2">
                 {[
                   "Your dashboard is populated with data from connected tools",
-                  "Open The Brief to tell Neaven what you're building",
-                  "Start coding — The Watcher picks up sessions automatically",
+                  "Open Overview to tell Neaven what you're building",
+                  "Start coding — Qode picks up sessions automatically",
                   "Your co-founder sends your first daily briefing tomorrow at 8am",
                 ].map((item, i) => (
                   <div key={i} className="flex items-start gap-2">

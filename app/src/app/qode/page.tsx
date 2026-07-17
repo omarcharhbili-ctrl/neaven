@@ -117,7 +117,7 @@ function PromptEvent({ type, time, prompt, refinedPrompt, reason }: {
   );
 }
 
-export default function WatcherPage() {
+export default function QodePage() {
   const [activeTab, setActiveTab] = useState<"sessions" | "timeline">("timeline");
 
   return (
@@ -127,10 +127,10 @@ export default function WatcherPage() {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <Eye className="w-5 h-5 text-purple-500" />
-            <h1 className="text-2xl font-bold">The Watcher</h1>
+            <h1 className="text-2xl font-bold">Qode</h1>
           </div>
           <p className="text-sm text-muted-foreground">
-            Monitors your coding sessions, refines prompts, and flags drift from the brief.
+            Monitors your coding sessions, refines prompts, and flags drift from the overview.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -224,20 +224,20 @@ export default function WatcherPage() {
               type="drift"
               time="10:45 AM"
               prompt="Add a dark mode toggle to the settings page"
-              reason="This feature isn't on your roadmap and your brief doesn't mention settings UI. The critical path is auth flow. Want to shelve this and refocus?"
+              reason="This feature isn't on your roadmap and your overview doesn't mention settings UI. The critical path is auth flow. Want to shelve this and refocus?"
             />
             <PromptEvent
               type="refined"
               time="9:23 AM"
               prompt="Create a login page"
-              refinedPrompt="Create a login page with email/password and OAuth (Google, GitHub) following the auth flow spec from the brief. Use Supabase Auth. Include error states for invalid credentials and rate limiting."
-              reason="Added context from your brief — tech stack (Supabase), OAuth providers, and error handling requirements."
+              refinedPrompt="Create a login page with email/password and OAuth (Google, GitHub) following the auth flow spec from the overview. Use Supabase Auth. Include error states for invalid credentials and rate limiting."
+              reason="Added context from your overview — tech stack (Supabase), OAuth providers, and error handling requirements."
             />
             <PromptEvent
               type="approved"
               time="9:15 AM"
               prompt="Set up Supabase auth client with environment variables and create the auth context provider"
-              reason="This prompt is well-scoped and directly maps to the 'Implement auth API routes' task in your brief."
+              reason="This prompt is well-scoped and directly maps to the 'Implement auth API routes' task in your overview."
             />
             <PromptEvent
               type="loop"
@@ -249,7 +249,7 @@ export default function WatcherPage() {
               type="drift"
               time="Yesterday 2:15 PM"
               prompt="Let's add animation to the landing page hero section"
-              reason="Landing page polish isn't in your current sprint. Your brief has auth and core invoicing as the focus. Flagged for later."
+              reason="Landing page polish isn't in your current sprint. Your overview has auth and core invoicing as the focus. Flagged for later."
             />
           </div>
         </div>

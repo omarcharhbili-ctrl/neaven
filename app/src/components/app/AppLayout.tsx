@@ -19,14 +19,15 @@ import {
   HelpCircle,
 } from "lucide-react";
 import { useState, ReactNode } from "react";
+import { useUser, useClerk } from "@clerk/nextjs";
 
 const navItems = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/brief", label: "The Brief", icon: Brain },
-  { href: "/watcher", label: "The Watcher", icon: Eye },
-  { href: "/cofounder", label: "Co-founder", icon: MessageSquare },
+  { href: "/overview", label: "Overview", icon: Brain },
+  { href: "/qode", label: "Qode", icon: Eye },
+  { href: "/chat", label: "Chat", icon: MessageSquare },
   { href: "/analytics", label: "Analytics", icon: BarChart3 },
-  { href: "/agents", label: "Agents", icon: Bot },
+  { href: "/automations", label: "Automations", icon: Bot },
   { href: "/connectors", label: "Connectors", icon: Plug },
 ];
 
@@ -37,6 +38,11 @@ const bottomItems = [
 export function AppLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const [collapsed, setCollapsed] = useState(false);
+  const { user } = useUser();
+  const { signOut } = useClerk();
+
+  const displayName = user?.fullName || user?.firstName || user?.primaryEmailAddress?.emailAddress || "Account";
+  const initial = (user?.firstName?.[0] || user?.primaryEmailAddress?.emailAddress?.[0] || "?").toUpperCase();
 
   return (
     <div className="h-screen flex bg-white overflow-hidden">
@@ -99,17 +105,21 @@ export function AppLayout({ children }: { children: ReactNode }) {
               </Link>
             );
           })}
-          <div className={`flex items-center gap-3 px-3 py-2 ${collapsed ? "justify-center" : ""}`}>
+          <button
+            onClick={() => signOut({ redirectUrl: "/" })}
+            title={collapsed ? `${displayName} — Sign out` : undefined}
+            className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-muted transition-colors ${collapsed ? "justify-center" : ""}`}
+          >
             <div className="w-7 h-7 rounded-full bg-accent text-white flex items-center justify-center text-xs font-bold shrink-0">
-              O
+              {initial}
             </div>
             {!collapsed && (
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">Omar</p>
-                <p className="text-xs text-muted-foreground truncate">Free plan</p>
+              <div className="flex-1 min-w-0 text-left">
+                <p className="text-sm font-medium truncate">{displayName}</p>
+                <p className="text-xs text-muted-foreground truncate">Free plan · Sign out</p>
               </div>
             )}
-          </div>
+          </button>
         </div>
       </aside>
 

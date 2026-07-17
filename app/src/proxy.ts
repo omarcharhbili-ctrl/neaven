@@ -1,10 +1,12 @@
-import { clerkMiddleware } from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
 
-// Frontend rolled back to the original mock screens (a1a621c) — nothing is
-// auth-gated while we rebuild step by step. clerkMiddleware still runs so
-// the API routes' auth() calls keep working once sign-in is reintroduced;
-// until then, unauthenticated API calls return 401 and pages browse freely.
-export default clerkMiddleware();
+const isPublicRoute = createRouteMatcher(["/", "/login(.*)", "/signup(.*)"]);
+
+export default clerkMiddleware(async (auth, req) => {
+  if (!isPublicRoute(req)) {
+    await auth.protect();
+  }
+});
 
 export const config = {
   matcher: [

@@ -129,11 +129,11 @@ function AppPreview() {
               </div>
               {[
                 { icon: "◉", label: "Dashboard", active: true },
-                { icon: "◎", label: "The Brief" },
-                { icon: "◈", label: "The Watcher" },
-                { icon: "◇", label: "Co-founder" },
+                { icon: "◎", label: "Overview" },
+                { icon: "◈", label: "Qode" },
+                { icon: "◇", label: "Chat" },
                 { icon: "▣", label: "Analytics" },
-                { icon: "⬡", label: "Agents" },
+                { icon: "⬡", label: "Automations" },
                 { icon: "⊕", label: "Connectors" },
               ].map((item) => (
                 <div
@@ -192,7 +192,7 @@ function AppPreview() {
                     <Eye className="w-3.5 h-3.5 text-muted-foreground" />
                   </div>
                   <div>
-                    <p className="text-sm font-medium">Watcher flagged 3 off-roadmap prompts</p>
+                    <p className="text-sm font-medium">Qode flagged 3 off-roadmap prompts</p>
                     <p className="text-xs text-muted-foreground mt-0.5">During yesterday&apos;s session, 3 prompts didn&apos;t match any brief item.</p>
                   </div>
                 </div>
@@ -226,7 +226,7 @@ function Features() {
   const features = [
     {
       icon: <Brain className="w-5 h-5" />,
-      label: "The Brief",
+      label: "Overview",
       title: "Your project's source of truth.",
       description: "A conversation — not a form — captures what you're building, your goals, and your deadline. Everything else checks against this.",
       features: ["Natural onboarding", "OKR-to-task cascade", "Drift detection", "Living document"],
@@ -234,7 +234,7 @@ function Features() {
     },
     {
       icon: <Eye className="w-5 h-5" />,
-      label: "The Watcher",
+      label: "Qode",
       title: "Your coding session supervisor.",
       description: "Plugs into your coding agent via MCP. Reads prompts, flags drift, refines bad prompts, and runs agentic loops automatically.",
       features: ["Real-time monitoring", "Prompt refinement", "Drift alerts", "Agentic loops"],
@@ -242,7 +242,7 @@ function Features() {
     },
     {
       icon: <MessageSquare className="w-5 h-5" />,
-      label: "Co-founder",
+      label: "Chat",
       title: "Your AI thinking partner.",
       description: "Not a dashboard you forget to check. A conversational co-founder that gives you morning briefings, mid-session nudges, and daily recaps.",
       features: ["Morning priorities", "Real-time course corrections", "Daily progress recaps", "Slack-like interface"],
@@ -258,10 +258,10 @@ function Features() {
     },
     {
       icon: <Bot className="w-5 h-5" />,
-      label: "Agents",
+      label: "Automations",
       title: "Build automations with plain text.",
-      description: "Describe what you want an agent to do. Neaven builds the workflow. Tweak the nodes and details if you want — or don't.",
-      features: ["Text-to-workflow", "Visual node editor", "24/7 automation", "Per-agent permissions"],
+      description: "Describe what you want an automation to do. Neaven builds the workflow. Tweak the nodes and details if you want — or don't.",
+      features: ["Text-to-workflow", "Visual node editor", "24/7 automation", "Per-automation permissions"],
       color: "bg-indigo-50 text-indigo-600 border-indigo-200",
     },
     {
@@ -321,19 +321,19 @@ function HowItWorks() {
     },
     {
       step: "02",
-      title: "Fill in The Brief",
+      title: "Fill in your Overview",
       description: "Have a quick conversation about what you're building, your goals, and your deadline. This becomes the source of truth.",
       icon: <Target className="w-5 h-5" />,
     },
     {
       step: "03",
       title: "Start building",
-      description: "Code like you normally would. The Watcher monitors sessions, the co-founder nudges you, and analytics populate automatically.",
+      description: "Code like you normally would. Qode monitors sessions, your co-founder nudges you, and analytics populate automatically.",
       icon: <Code2 className="w-5 h-5" />,
     },
     {
       step: "04",
-      title: "Create agents for the repetitive stuff",
+      title: "Create automations for the repetitive stuff",
       description: "Describe automations in plain text — deploy watchers, standup digests, feedback triage — and let them run 24/7.",
       icon: <Bot className="w-5 h-5" />,
     },
@@ -437,13 +437,13 @@ function Testimonials() {
       avatar: "SC",
     },
     {
-      quote: "The Watcher caught me vibecoding a feature that wasn't on my roadmap. That alone saved me two days of wasted work.",
+      quote: "Qode caught me vibecoding a feature that wasn't on my roadmap. That alone saved me two days of wasted work.",
       name: "Marcus Johnson",
       role: "CTO, Launchpad",
       avatar: "MJ",
     },
     {
-      quote: "I described an agent in one sentence and it's been running my deploy monitoring for two weeks. Zero config.",
+      quote: "I described an automation in one sentence and it's been running my deploy monitoring for two weeks. Zero config.",
       name: "Aisha Patel",
       role: "Technical founder, Stackwise",
       avatar: "AP",
@@ -501,7 +501,7 @@ function PricingSection() {
               <span className="text-muted-foreground text-sm">/month</span>
             </div>
             <ul className="space-y-2.5 mb-6">
-              {["1 project", "Basic Watcher (5 sessions/week)", "Daily co-founder digest", "3 connectors", "1 custom agent"].map(f => (
+              {["1 project", "Basic Qode (5 sessions/week)", "Daily co-founder digest", "3 connectors", "1 custom automation"].map(f => (
                 <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CheckCircle2 className="w-4 h-4 text-success shrink-0" />{f}
                 </li>
@@ -519,7 +519,7 @@ function PricingSection() {
               <span className="text-muted-foreground text-sm">/month</span>
             </div>
             <ul className="space-y-2.5 mb-6">
-              {["Unlimited projects", "Full Watcher (unlimited sessions)", "Real-time nudges & alerts", "Unlimited connectors", "Unlimited agents", "Analytics dashboard", "Priority support"].map(f => (
+              {["Unlimited projects", "Full Qode (unlimited sessions)", "Real-time nudges & alerts", "Unlimited connectors", "Unlimited automations", "Analytics dashboard", "Priority support"].map(f => (
                 <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CheckCircle2 className="w-4 h-4 text-success shrink-0" />{f}
                 </li>
@@ -536,7 +536,7 @@ function PricingSection() {
               <span className="text-muted-foreground text-sm">/month</span>
             </div>
             <ul className="space-y-2.5 mb-6">
-              {["Everything in Pro", "Up to 5 team members", "Team-wide context sharing", "Shared agents & workflows", "Dedicated support"].map(f => (
+              {["Everything in Pro", "Up to 5 team members", "Team-wide context sharing", "Shared automations & workflows", "Dedicated support"].map(f => (
                 <li key={f} className="flex items-center gap-2 text-sm text-muted-foreground">
                   <CheckCircle2 className="w-4 h-4 text-success shrink-0" />{f}
                 </li>
@@ -587,7 +587,7 @@ function Footer() {
           <div>
             <h4 className="font-semibold text-sm mb-3">Product</h4>
             <ul className="space-y-2">
-              {["The Brief", "The Watcher", "Co-founder", "Analytics", "Agents", "Connectors"].map(item => (
+              {["Overview", "Qode", "Chat", "Analytics", "Automations", "Connectors"].map(item => (
                 <li key={item}><a href="#" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{item}</a></li>
               ))}
             </ul>

@@ -42,7 +42,7 @@ const initialMessages: Message[] = [
     time: "8:00 AM",
     isDigest: true,
     digestItems: [
-      { icon: "🎯", text: "3 priority tasks for today (from your brief)", status: "todo" },
+      { icon: "🎯", text: "3 priority tasks for today (from your overview)", status: "todo" },
       { icon: "📊", text: "Sprint progress: 68% — on pace for July 30", status: "done" },
       { icon: "⚠️", text: "Auth flow is the critical path — stay focused until it's done", status: "warning" },
       { icon: "✅", text: "Yesterday: 4 tasks completed, 2h 15m coding time", status: "done" },
@@ -68,13 +68,13 @@ const initialMessages: Message[] = [
   {
     id: "5",
     type: "bot",
-    content: "Stay on auth. Here's my thinking:\n\n• Auth is the launch blocker — nothing else works without it\n• Invoice UI has zero dependencies on auth being incomplete\n• Your brief puts auth at P0, invoice UI at P1\n• 36 days to deadline — auth today, invoice UI tomorrow is the right sequence\n\nI've scoped 2 prompts for your auth session. They'll be ready in The Watcher when you start coding.",
+    content: "Stay on auth. Here's my thinking:\n\n• Auth is the launch blocker — nothing else works without it\n• Invoice UI has zero dependencies on auth being incomplete\n• Your overview puts auth at P0, invoice UI at P1\n• 36 days to deadline — auth today, invoice UI tomorrow is the right sequence\n\nI've scoped 2 prompts for your auth session. They'll be ready in Qode when you start coding.",
     time: "8:16 AM",
   },
   {
     id: "6",
     type: "system",
-    content: "The Watcher detected a coding session at 9:15 AM",
+    content: "Qode detected a coding session at 9:15 AM",
     time: "9:15 AM",
   },
   {
@@ -90,7 +90,7 @@ const initialMessages: Message[] = [
     time: "10:45 AM",
     actions: [
       { label: "Flag as drift — refocus me", variant: "primary" },
-      { label: "Intentional — update brief", variant: "secondary" },
+      { label: "Intentional — update overview", variant: "secondary" },
     ],
   },
   {
@@ -102,7 +102,7 @@ const initialMessages: Message[] = [
   {
     id: "10",
     type: "bot",
-    content: "Done. Flagged in The Watcher, auth prompts re-queued.\n\n→ Next: Email verification timeout handler\n→ After: Rate limiting on login attempts\n\n2 tasks away from completing auth. Let's close this out today.",
+    content: "Done. Flagged in Qode, auth prompts re-queued.\n\n→ Next: Email verification timeout handler\n→ After: Rate limiting on login attempts\n\n2 tasks away from completing auth. Let's close this out today.",
     time: "10:47 AM",
   },
 ];
@@ -186,7 +186,7 @@ function ChatBubble({ message }: { message: Message }) {
   );
 }
 
-export default function CofounderPage() {
+export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -210,7 +210,7 @@ export default function CofounderPage() {
       const reply: Message = {
         id: (Date.now() + 1).toString(),
         type: "bot",
-        content: "Let me check that against your brief and get back to you with a recommendation.",
+        content: "Let me check that against your overview and get back to you with a recommendation.",
         time: new Date().toLocaleTimeString([], { hour: "numeric", minute: "2-digit" }),
       };
       setMessages((prev) => [...prev, reply]);
@@ -226,10 +226,10 @@ export default function CofounderPage() {
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h1 className="font-semibold">Your AI Co-founder</h1>
+              <h1 className="font-semibold">Chat</h1>
               <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
             </div>
-            <p className="text-xs text-muted-foreground">Thinks with you, not for you — always grounded in the brief</p>
+            <p className="text-xs text-muted-foreground">Thinks with you, not for you — always grounded in the overview</p>
           </div>
         </div>
         <div className="flex items-center gap-2">

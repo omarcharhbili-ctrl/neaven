@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
-type Tab = "profile" | "notifications" | "connections" | "watcher" | "billing" | "security";
+type Tab = "profile" | "notifications" | "connections" | "qode" | "billing" | "security";
 
 function ToggleSwitch({ enabled, onChange }: { enabled: boolean; onChange: () => void }) {
   return (
@@ -75,7 +75,7 @@ export default function SettingsPage() {
     { id: "profile", label: "Profile", icon: User },
     { id: "notifications", label: "Notifications", icon: Bell },
     { id: "connections", label: "Connections", icon: Link2 },
-    { id: "watcher", label: "Watcher settings", icon: Eye },
+    { id: "qode", label: "Qode settings", icon: Eye },
     { id: "billing", label: "Billing", icon: CreditCard },
     { id: "security", label: "Security", icon: Shield },
   ];
@@ -162,7 +162,7 @@ export default function SettingsPage() {
             <div className="rounded-xl border border-border bg-white p-6">
               <h2 className="font-semibold mb-6">Notifications</h2>
               <div className="mb-6">
-                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">Co-founder notifications</h3>
+                <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider mb-3">Chat notifications</h3>
                 <SettingRow label="Morning digest" description="Daily briefing at 8:00 AM with priorities and progress">
                   <ToggleSwitch enabled={notifications.morningDigest} onChange={() => setNotifications({ ...notifications, morningDigest: !notifications.morningDigest })} />
                 </SettingRow>
@@ -172,7 +172,7 @@ export default function SettingsPage() {
                 <SettingRow label="End-of-day recap" description="Summary of what you accomplished and what's next">
                   <ToggleSwitch enabled={notifications.endOfDay} onChange={() => setNotifications({ ...notifications, endOfDay: !notifications.endOfDay })} />
                 </SettingRow>
-                <SettingRow label="Drift alerts" description="Immediate notification when prompts drift from the brief">
+                <SettingRow label="Drift alerts" description="Immediate notification when prompts drift from the overview">
                   <ToggleSwitch enabled={notifications.driftAlerts} onChange={() => setNotifications({ ...notifications, driftAlerts: !notifications.driftAlerts })} />
                 </SettingRow>
               </div>
@@ -227,20 +227,20 @@ export default function SettingsPage() {
             </div>
           )}
 
-          {activeTab === "watcher" && (
+          {activeTab === "qode" && (
             <div className="rounded-xl border border-border bg-white p-6">
-              <h2 className="font-semibold mb-6">Watcher settings</h2>
-              <SettingRow label="Auto-refine prompts" description="Automatically enrich prompts with context from the brief before sending">
+              <h2 className="font-semibold mb-6">Qode settings</h2>
+              <SettingRow label="Auto-refine prompts" description="Automatically enrich prompts with context from the overview before sending">
                 <ToggleSwitch enabled={true} onChange={() => {}} />
               </SettingRow>
               <SettingRow label="Drift sensitivity" description="How aggressively to flag off-roadmap work">
                 <select className="px-3 py-1.5 rounded-lg border border-border text-sm bg-white">
                   <option>Low — only flag major drift</option>
                   <option>Medium — balanced (recommended)</option>
-                  <option>High — flag everything off-brief</option>
+                  <option>High — flag everything off-overview</option>
                 </select>
               </SettingRow>
-              <SettingRow label="Agentic loops" description="Allow Watcher to run prompt → code → test → fix loops automatically">
+              <SettingRow label="Agentic loops" description="Allow Qode to run prompt → code → test → fix loops automatically">
                 <ToggleSwitch enabled={true} onChange={() => {}} />
               </SettingRow>
               <SettingRow label="Max loop iterations" description="Maximum iterations before stopping and asking for input">
