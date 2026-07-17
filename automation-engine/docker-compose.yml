@@ -10,9 +10,15 @@ services:
     container_name: neaven-automation-engine
     restart: unless-stopped
     ports:
-      - "127.0.0.1:8080:80"
+      - "127.0.0.1:8080:8080"
     environment:
       AP_FRONTEND_URL: http://localhost:8080
+      # The engine sandbox resolves API URLs from AP_FRONTEND_URL, so that URL
+      # must be valid INSIDE the container too. Listening on 8080 in-container
+      # makes http://localhost:8080 correct from both the host browser and the
+      # sandbox (previously the app listened on 80 → every flow test/publish
+      # failed with ECONNREFUSED 127.0.0.1:8080 "fetch failed").
+      AP_PORT: "8080"
       AP_ENCRYPTION_KEY: 6f0f8b2fce4f4d3e9a1b7c5d8e2f4a6b
       AP_JWT_SECRET: neaven-dev-jwt-secret-3f9c1e7a5b2d
       AP_POSTGRES_DATABASE: activepieces
@@ -32,6 +38,10 @@ services:
       # production the auth endpoints must be blocked at the proxy except
       # from the Neaven app server (see docs/neaven-infrastructure-reference.md).
       AP_ALLOW_OPEN_SIGN_UP: "true"
+      # No Activepieces-cloud shared OAuth apps: connection dialogs ask for
+      # our own OAuth client credentials instead of bouncing tokens through
+      # secrets.activepieces.com under Activepieces branding.
+      AP_CLOUD_AUTH_ENABLED: "false"
     volumes:
       # The source-built image serves the frontend via fastify-static from
       # dist/packages/web; a real file there is served before the SPA fallback.

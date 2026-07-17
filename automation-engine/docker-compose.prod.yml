@@ -39,6 +39,10 @@ services:
       # endpoints publicly — only the Neaven app reaches them, server-to-server
       # over neaven_shared — so open sign-up is not actually open to the world.
       AP_ALLOW_OPEN_SIGN_UP: "true"
+      # No Activepieces-cloud shared OAuth apps: connection dialogs ask for
+      # our own OAuth client credentials instead of bouncing tokens through
+      # secrets.activepieces.com under Activepieces branding.
+      AP_CLOUD_AUTH_ENABLED: "false"
     volumes:
       # Same-origin silent-auth handoff page (see bridge/embed-bridge.html).
       - ./bridge/embed-bridge.html:/usr/src/app/dist/packages/web/embed-bridge.html:ro
