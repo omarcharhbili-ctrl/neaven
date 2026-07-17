@@ -23,6 +23,15 @@ services:
       AP_REDIS_HOST: redis
       AP_REDIS_PORT: "6379"
       AP_TELEMETRY_ENABLED: "false"
+      # Lets the Neaven app iframe the builder (CSP frame-ancestors).
+      # Comma-separated origins; production adds https://neaven.net here.
+      AP_ALLOWED_EMBED_ORIGINS: http://localhost:3000,http://localhost:3001,http://localhost:3003
+      # The silent-auth bridge provisions one engine user per founder via the
+      # public sign-up API; without this the platform is invitation-only and
+      # every founder after the first gets INVITATION_ONLY_SIGN_UP. In
+      # production the auth endpoints must be blocked at the proxy except
+      # from the Neaven app server (see docs/neaven-infrastructure-reference.md).
+      AP_ALLOW_OPEN_SIGN_UP: "true"
     volumes:
       # The source-built image serves the frontend via fastify-static from
       # dist/packages/web; a real file there is served before the SPA fallback.
